@@ -1,0 +1,3 @@
+[2026-09-09 22:52:17] [ERROR] Incorrect PIN attempt for user ID 1
+[2026-09-09 22:52:39] [INFO] User ID 1 logged in successfully
+[2026-09-09 22:52:39] [INFO] Session started for user 1
