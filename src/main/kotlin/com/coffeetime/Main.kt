@@ -2,10 +2,13 @@ package com.coffeetime
 
 import com.coffeetime.database.DatabaseManager
 import com.coffeetime.model.Role
+import com.coffeetime.repository.ProductoRepositorySQLite
 import com.coffeetime.repository.UserRepository
 import com.coffeetime.repository.UserRepositorySQLite
 import com.coffeetime.service.AuthenticationService
+import com.coffeetime.service.OrdenService
 import com.coffeetime.service.Session
+import com.coffeetime.util.MenuConsole
 import com.coffeetime.util.PinSecurity
 
 fun main() {
@@ -43,6 +46,13 @@ fun main() {
         println("Login successful")
         println("Welcome ${user.name}")
         println("Role: ${user.role}")
+
+        val productRepository = ProductoRepositorySQLite()
+        val orderService = OrdenService(productRepository)
+        MenuConsole(
+            productoRepository = productRepository,
+            ordenService = orderService
+        ).mostrarMenu()
 
     } catch (e: Exception) {
 
