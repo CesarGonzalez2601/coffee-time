@@ -28,6 +28,7 @@ object DatabaseManager {
             createProductsTable(connection)
             createOrdersTable(connection)
             createOrderDetailsTable(connection)
+            createPagosTable(connection)
             insertInitialProducts(connection)
         }
     }
@@ -124,6 +125,24 @@ object DatabaseManager {
                 subtotal REAL NOT NULL,
                 FOREIGN KEY (orden_id) REFERENCES ordenes(id),
                 FOREIGN KEY (producto_id) REFERENCES productos(id)
+            )
+        """.trimIndent()
+
+        connection.createStatement().use { statement ->
+            statement.execute(sql)
+        }
+    }
+
+    private fun createPagosTable(connection: Connection) {
+        val sql = """
+            CREATE TABLE IF NOT EXISTS pagos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                orden_id INTEGER NOT NULL,
+                total_pagado REAL NOT NULL,
+                metodo_pago TEXT NOT NULL,
+                correlativo TEXT NOT NULL,
+                fecha_hora TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (orden_id) REFERENCES ordenes(id)
             )
         """.trimIndent()
 
