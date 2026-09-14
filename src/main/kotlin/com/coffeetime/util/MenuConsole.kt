@@ -148,6 +148,7 @@ class MenuConsole(
                 "para procesar el pago."
         )
         mostrarTotales(ordenConfirmada)
+        procesarPago(ordenConfirmada)
     }
 
     private fun menuInventario() {
@@ -269,14 +270,49 @@ class MenuConsole(
     }
 
     private fun procesarPago(orden: Orden) {
-        if (!leerConfirmacion("¿Procesar cobro? (s/n): ")) {
+        println()
+        println("===== PAGO DE ORDEN #${orden.id} =====")
+        println("Seleccione el método de pago:")
+        println("1. Efectivo")
+        println("2. Tarjeta")
+        println("0. Pagar más tarde (Guardar orden)")
+        val opcion = leerEntero("Opción: ")
+
+        if (opcion == 0) {
+            println("Orden #${orden.id} guardada. Puede cobrarla después desde el menú 'Pagos'.")
             return
         }
 
-        if (ordenService.procesarPagoYConfirmarOrden(orden)) {
-            println("Pago procesado. Orden marcada como PAGADA.")
+        val metodoPago = when (opcion) {
+            1 -> {
+                val monto = leerDouble("Monto recibido: $")
+                com.coffeetime.model.PagoEfectivo(monto)
+            }
+            2 -> {
+                val numero = leerTexto("Número de tarjeta (16 dígitos): ")
+                val titular = leerTexto("Nombre del titular: ")
+                com.coffeetime.model.PagoTarjeta(numero, titular)
+            }
+            else -> {
+                println("Opción inválida. Orden #${orden.id} guardada para cobrar más tarde.")
+                return
+            }
+        }
+
+        val pago = com.coffeetime.model.Pago(
+            ordenId = orden.id,
+            totalPagado = orden.total,
+            metodoPago = metodoPago
+        )
+
+        val pagoService = com.coffeetime.service.PagoService(ordenService)
+
+        if (pagoService.registrarPago(pago, orden)) {
+            println("Pago procesado exitosamente")
+            println("Correlativo de transacción: ${pago.correlativo}")
+            println(metodoPago.obtenerDetalle())
         } else {
-            println("No se pudo procesar el pago.")
+            println("Transacción rechazada: Fondos insuficientes.")
         }
     }
 
