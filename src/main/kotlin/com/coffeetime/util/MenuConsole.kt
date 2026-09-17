@@ -7,11 +7,14 @@ import com.coffeetime.model.EstadoOrden
 import com.coffeetime.model.Orden
 import com.coffeetime.model.Producto
 import com.coffeetime.repository.ProductoRepositorySQLite
+import com.coffeetime.service.InventarioService
 import com.coffeetime.service.OrdenService
+import com.coffeetime.service.PagoService
 
 class MenuConsole(
     private val productoRepository: ProductoRepositorySQLite,
-    private val ordenService: OrdenService
+    private val ordenService: OrdenService,
+    private val inventarioService: InventarioService? = null
 ) {
 
     fun mostrarMenu() {
@@ -48,11 +51,11 @@ class MenuConsole(
         println("Ingresos acumulados: $%.2f".format(metricas.ingresos))
 
         if (metricas.stockBajo.isEmpty()) {
-            println("Stock bajo: ninguno")
+            println("Stock crítico (<= 5): ninguno")
         } else {
-            println("Stock bajo (<= 3):")
+            println("Stock crítico (<= 5):")
             metricas.stockBajo.forEach {
-                println("- ${it.nombre}: ${it.stock}")
+                println("- ${it.nombre}: ${it.stock} unidades")
             }
         }
     }
@@ -145,7 +148,7 @@ class MenuConsole(
 
         println(
             "Orden #${ordenConfirmada.id} confirmada y lista " +
-                "para procesar el pago."
+                    "para procesar el pago."
         )
         mostrarTotales(ordenConfirmada)
         procesarPago(ordenConfirmada)
@@ -156,21 +159,100 @@ class MenuConsole(
 
         while (continuar) {
             println()
-            println("===== INVENTARIO =====")
-            println("1. Listar por categoría")
-            println("2. Agregar producto")
-            println("3. Actualizar precio y stock")
-            println("4. Eliminar producto")
+            println("===== GESTIÓN DE INVENTARIO =====")
+            println("1. Listar productos por categoría")
+            println("2. Ver productos con Stock Crítico (<= 5)")
+            println("3. Reabastecer stock (Entrada)")
+            println("4. Disminuir stock (Salida)")
+            println("5. Ajuste manual de stock")
+            println("6. Agregar nuevo producto")
+            println("7. Eliminar producto")
             println("0. Volver")
 
             when (leerEntero("Seleccione una opción: ")) {
                 1 -> listarPorCategoria()
-                2 -> agregarProducto()
-                3 -> actualizarProducto()
-                4 -> eliminarProducto()
+                2 -> verStockCritico()
+                3 -> reabastecerStock()
+                4 -> disminuirStock()
+                5 -> ajusteManualStock()
+                6 -> agregarProducto()
+                7 -> eliminarProducto()
                 0 -> continuar = false
                 else -> println("Opción inválida.")
             }
+        }
+    }
+
+    private fun verStockCritico() {
+        val criticos = inventarioService?.obtenerProductosCriticos()
+            ?: productoRepository.obtenerProductos().filter { it.stock <= 5 }
+
+        println()
+        println("--- PRODUCTOS EN ESTADO CRÍTICO (<= 5) ---")
+        if (criticos.isEmpty()) {
+            println("No hay productos con stock crítico.")
+        } else {
+            criticos.forEach {
+                println("ID: ${it.id} | ${it.nombre} | Stock actual: ${it.stock} unidades")
+            }
+        }
+    }
+
+    private fun reabastecerStock() {
+        mostrarProductos(productoRepository.obtenerProductos())
+        val id = leerEntero("ID del producto a reabastecer: ")
+        val cantidad = leerEntero("Cantidad a agregar: ")
+        val motivo = leerTexto("Motivo (ej. Compra a proveedor): ")
+
+        val exito = if (inventarioService != null) {
+            inventarioService.aumentarStock(id, cantidad, motivo)
+        } else {
+            productoRepository.incrementarStock(id, cantidad)
+        }
+
+        if (exito) {
+            println("Stock reabastecido con éxito.")
+        } else {
+            println("Error al reabastecer el stock.")
+        }
+    }
+
+    private fun disminuirStock() {
+        mostrarProductos(productoRepository.obtenerProductos())
+        val id = leerEntero("ID del producto a descontar: ")
+        val cantidad = leerEntero("Cantidad a descontar: ")
+        val motivo = leerTexto("Motivo (ej. Merma / Producto dañado): ")
+
+        val exito = if (inventarioService != null) {
+            inventarioService.disminuirStock(id, cantidad, motivo)
+        } else {
+            productoRepository.reducirStock(id, cantidad)
+        }
+
+        if (exito) {
+            println("Stock descontado con éxito.")
+        } else {
+            println("Error: cantidad no válida o stock insuficiente.")
+        }
+    }
+
+    private fun ajusteManualStock() {
+        mostrarProductos(productoRepository.obtenerProductos())
+        val id = leerEntero("ID del producto a ajustar: ")
+        val nuevoStock = leerEntero("Nuevo stock total: ")
+        val motivo = leerTexto("Motivo del ajuste de inventario: ")
+
+        val exito = if (inventarioService != null) {
+            inventarioService.ajusteManual(id, nuevoStock, motivo)
+        } else {
+            val prod = productoRepository.buscarPorId(id)
+            if (prod != null) productoRepository.actualizarProducto(id, prod.precio, nuevoStock) else false
+        }
+
+        if (exito) {
+            println("Ajuste manual aplicado correctamente.")
+        } else {
+            println("Error al aplicar el ajuste manual.")
         }
     }
 
@@ -202,25 +284,20 @@ class MenuConsole(
         println("Producto creado con ID ${producto.id}.")
     }
 
-    private fun actualizarProducto() {
-        val id = leerEntero("ID del producto: ")
-        val precio = leerDouble("Nuevo precio: ")
-        val stock = leerEntero("Nuevo stock: ")
-
-        if (productoRepository.actualizarProducto(id, precio, stock)) {
-            println("Producto actualizado.")
-        } else {
-            println("Producto no encontrado.")
-        }
-    }
-
     private fun eliminarProducto() {
-        val id = leerEntero("ID del producto: ")
+        mostrarProductos(productoRepository.obtenerProductos())
+        val id = leerEntero("ID del producto a eliminar: ")
+
+        val productoExiste = productoRepository.buscarPorId(id)
+        if (productoExiste == null) {
+            println("Producto no encontrado.")
+            return
+        }
 
         if (productoRepository.eliminarProducto(id)) {
-            println("Producto eliminado.")
+            println("Producto eliminado correctamente.")
         } else {
-            println("Producto no encontrado.")
+            println("No se pudo eliminar el producto (puede tener historial de ventas o movimientos asociados).")
         }
     }
 
@@ -237,7 +314,7 @@ class MenuConsole(
         ordenes.forEach { orden ->
             println(
                 "Orden #${orden.id} - Total: " +
-                    "$%.2f".format(orden.total)
+                        "$%.2f".format(orden.total)
             )
         }
 
@@ -305,7 +382,7 @@ class MenuConsole(
             metodoPago = metodoPago
         )
 
-        val pagoService = com.coffeetime.service.PagoService(ordenService)
+        val pagoService = PagoService(ordenService, inventarioService)
 
         if (pagoService.registrarPago(pago, orden)) {
             println("Pago procesado exitosamente")
@@ -354,7 +431,7 @@ class MenuConsole(
         ordenService.carritoActual.detalles.forEach {
             println(
                 "${it.producto.id}. ${it.producto.nombre} " +
-                    "x${it.cantidad} = $%.2f".format(it.subtotalItem)
+                        "x${it.cantidad} = $%.2f".format(it.subtotalItem)
             )
         }
     }
@@ -363,7 +440,7 @@ class MenuConsole(
         productos.forEach {
             println(
                 "${it.id}. ${it.nombre} | ${it.categoria} | " +
-                    "$%.2f | stock: ${it.stock}".format(it.precio)
+                        "$%.2f | stock: ${it.stock}".format(it.precio)
             )
         }
     }
@@ -456,8 +533,8 @@ class MenuConsole(
             }
         }
 
-        val stockBajo = productoRepository.obtenerProductos()
-            .filter { it.stock <= 3 }
+        val stockBajo = inventarioService?.obtenerProductosCriticos()
+            ?: productoRepository.obtenerProductos().filter { it.stock <= 5 }
 
         return MetricasDelDia(
             totalOrdenes = totalOrdenes,

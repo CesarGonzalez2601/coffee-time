@@ -10,6 +10,8 @@ import com.coffeetime.service.OrdenService
 import com.coffeetime.service.Session
 import com.coffeetime.util.MenuConsole
 import com.coffeetime.util.PinSecurity
+import com.coffeetime.repository.InventarioRepositorySQLite
+import com.coffeetime.service.InventarioService
 
 fun main() {
 
@@ -48,10 +50,13 @@ fun main() {
         println("Role: ${user.role}")
 
         val productRepository = ProductoRepositorySQLite()
+        val inventarioService = InventarioService(InventarioRepositorySQLite(), productRepository)
         val orderService = OrdenService(productRepository)
+
         MenuConsole(
             productoRepository = productRepository,
-            ordenService = orderService
+            ordenService = orderService,
+            inventarioService = inventarioService
         ).mostrarMenu()
 
     } catch (e: Exception) {

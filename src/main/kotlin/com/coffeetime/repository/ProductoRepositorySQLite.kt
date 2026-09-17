@@ -112,14 +112,19 @@ class ProductoRepositorySQLite {
     }
 
     fun eliminarProducto(id: Int): Boolean {
-
         val sql = "DELETE FROM productos WHERE id = ?"
 
-        DatabaseManager.getConnection().use { connection ->
-            connection.prepareStatement(sql).use { statement ->
-                statement.setInt(1, id)
-                return statement.executeUpdate() > 0
+        return try {
+            DatabaseManager.getConnection().use { connection ->
+                connection.prepareStatement(sql).use { statement ->
+                    statement.setInt(1, id)
+                    statement.executeUpdate() > 0
+                }
             }
+        } catch (e: java.sql.SQLException) {
+            // Si tiene ventas o movimientos asociados, SQLite arroja SQLITE_CONSTRAINT_FOREIGNKEY
+            println("\n[AVISO] No se puede eliminar el producto ID $id porque tiene registros asociados (órdenes o movimientos de inventario).")
+            false
         }
     }
 

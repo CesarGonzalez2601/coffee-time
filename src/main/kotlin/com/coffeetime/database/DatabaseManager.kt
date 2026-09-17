@@ -29,6 +29,8 @@ object DatabaseManager {
             createOrdersTable(connection)
             createOrderDetailsTable(connection)
             createPagosTable(connection)
+            createPagosTable(connection)
+            createMovimientosInventarioTable(connection)
             insertInitialProducts(connection)
         }
     }
@@ -190,6 +192,23 @@ object DatabaseManager {
             }
 
             statement.executeBatch()
+        }
+    }
+    private fun createMovimientosInventarioTable(connection: Connection) {
+        val sql = """
+            CREATE TABLE IF NOT EXISTS movimientos_inventario (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                producto_id INTEGER NOT NULL,
+                tipo TEXT NOT NULL,
+                cantidad INTEGER NOT NULL,
+                motivo TEXT,
+                fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (producto_id) REFERENCES productos(id)
+            )
+        """.trimIndent()
+
+        connection.createStatement().use { statement ->
+            statement.execute(sql)
         }
     }
 }

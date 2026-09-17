@@ -5,7 +5,10 @@ import com.coffeetime.model.Orden
 import com.coffeetime.model.Pago
 import com.coffeetime.util.Logger
 
-class PagoService(private val ordenService: OrdenService) {
+class PagoService(
+    private val ordenService: OrdenService,
+    private val inventarioService: InventarioService? = null
+) {
 
     fun registrarPago(pago: Pago, orden: Orden): Boolean {
         return try {
@@ -26,8 +29,13 @@ class PagoService(private val ordenService: OrdenService) {
                 }
             }
 
-            ordenService.procesarPagoYConfirmarOrden(orden)
+            val ordenPagada = ordenService.procesarPagoYConfirmarOrden(orden)
 
+            if (ordenPagada) {
+                inventarioService?.descontarStockPorVenta(orden)
+            }
+
+            ordenPagada
         } catch (e: Exception) {
             Logger.logError("Pago fallido para la orden ${orden.id}: ${e.message}")
             false
