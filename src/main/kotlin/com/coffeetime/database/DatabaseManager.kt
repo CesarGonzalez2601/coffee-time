@@ -29,8 +29,8 @@ object DatabaseManager {
             createOrdersTable(connection)
             createOrderDetailsTable(connection)
             createPagosTable(connection)
-            createPagosTable(connection)
             createMovimientosInventarioTable(connection)
+            createCierresCajaTable(connection)
             insertInitialProducts(connection)
         }
     }
@@ -194,6 +194,27 @@ object DatabaseManager {
             statement.executeBatch()
         }
     }
+    private fun createCierresCajaTable(connection: Connection) {
+        val sql = """
+            CREATE TABLE IF NOT EXISTS cierres_caja (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha TEXT NOT NULL UNIQUE,
+                usuario_id INTEGER NOT NULL,
+                cantidad_ordenes INTEGER NOT NULL,
+                total_ventas REAL NOT NULL,
+                total_efectivo REAL NOT NULL,
+                total_tarjeta REAL NOT NULL,
+                efectivo_contado REAL NOT NULL,
+                fecha_hora TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (usuario_id) REFERENCES users(id)
+            )
+        """.trimIndent()
+
+        connection.createStatement().use { statement ->
+            statement.execute(sql)
+        }
+    }
+
     private fun createMovimientosInventarioTable(connection: Connection) {
         val sql = """
             CREATE TABLE IF NOT EXISTS movimientos_inventario (
