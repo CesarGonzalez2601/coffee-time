@@ -12,7 +12,14 @@ class PagoService(
 
     fun registrarPago(pago: Pago, orden: Orden): Boolean {
         return try {
-            pago.metodoPago.procesarPago(orden.total)
+            // PagoTarjeta senala el rechazo devolviendo false (PagoEfectivo lanza excepcion).
+            // Sin este guard la orden quedaba PAGADA y ensuciaba los reportes.
+            if (!pago.metodoPago.procesarPago(orden.total)) {
+                Logger.logError(
+                    "Pago rechazado para la orden ${orden.id}: metodo ${pago.metodoPago.tipo}"
+                )
+                return false
+            }
 
             val sql = """
                 INSERT INTO pagos (orden_id, total_pagado, metodo_pago, correlativo)

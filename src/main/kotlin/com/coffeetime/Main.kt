@@ -10,8 +10,12 @@ import com.coffeetime.service.OrdenService
 import com.coffeetime.service.Session
 import com.coffeetime.util.MenuConsole
 import com.coffeetime.util.PinSecurity
+import com.coffeetime.repository.CierreCajaRepositorySQLite
 import com.coffeetime.repository.InventarioRepositorySQLite
+import com.coffeetime.repository.ReporteRepositorySQLite
+import com.coffeetime.service.CierreCajaService
 import com.coffeetime.service.InventarioService
+import com.coffeetime.service.ReporteService
 
 fun main() {
 
@@ -53,9 +57,18 @@ fun main() {
         val inventarioService = InventarioService(InventarioRepositorySQLite(), productRepository)
         val orderService = OrdenService(productRepository)
 
+        val reporteRepository = ReporteRepositorySQLite()
+        val reporteService = ReporteService(reporteRepository)
+        val cierreCajaService = CierreCajaService(
+            CierreCajaRepositorySQLite(),
+            reporteRepository
+        )
+
         MenuConsole(
             productoRepository = productRepository,
             ordenService = orderService,
+            reporteService = reporteService,
+            cierreCajaService = cierreCajaService,
             inventarioService = inventarioService
         ).mostrarMenu()
 

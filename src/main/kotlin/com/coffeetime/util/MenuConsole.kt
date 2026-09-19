@@ -1,19 +1,30 @@
 package com.coffeetime.util
 
 import com.coffeetime.database.DatabaseManager
+import com.coffeetime.exception.PermissionDeniedException
 import com.coffeetime.model.CategoriaProducto
+import com.coffeetime.model.CierreCaja
 import com.coffeetime.model.DetalleOrden
 import com.coffeetime.model.EstadoOrden
 import com.coffeetime.model.Orden
+import com.coffeetime.model.Permission
 import com.coffeetime.model.Producto
+import com.coffeetime.model.Reporte
 import com.coffeetime.repository.ProductoRepositorySQLite
+import com.coffeetime.service.CierreCajaService
 import com.coffeetime.service.InventarioService
 import com.coffeetime.service.OrdenService
 import com.coffeetime.service.PagoService
+import com.coffeetime.service.ReporteService
+import com.coffeetime.service.Session
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 class MenuConsole(
     private val productoRepository: ProductoRepositorySQLite,
     private val ordenService: OrdenService,
+    private val reporteService: ReporteService,
+    private val cierreCajaService: CierreCajaService,
     private val inventarioService: InventarioService? = null
 ) {
 
@@ -28,6 +39,8 @@ class MenuConsole(
             println("3. Inventario")
             println("4. Pagos")
             println("5. Historial")
+            println("6. Reportes")
+            println("7. Cierre de caja")
             println("0. Salir")
 
             when (leerEntero("Seleccione una opción: ")) {
@@ -36,6 +49,8 @@ class MenuConsole(
                 3 -> menuInventario()
                 4 -> menuPagos()
                 5 -> mostrarHistorial()
+                6 -> menuReportes()
+                7 -> menuCierreCaja()
                 0 -> continuar = false
                 else -> println("Opción inválida.")
             }
@@ -347,6 +362,10 @@ class MenuConsole(
     }
 
     private fun procesarPago(orden: Orden) {
+        if (!confirmarCobroEnJornadaCerrada(orden)) {
+            return
+        }
+
         println()
         println("===== PAGO DE ORDEN #${orden.id} =====")
         println("Seleccione el método de pago:")
@@ -389,8 +408,30 @@ class MenuConsole(
             println("Correlativo de transacción: ${pago.correlativo}")
             println(metodoPago.obtenerDetalle())
         } else {
-            println("Transacción rechazada: Fondos insuficientes.")
+            println("Transacción rechazada. Revise los datos del pago e intente nuevamente.")
+            println("La orden #${orden.id} queda pendiente de cobro en el menú 'Pagos'.")
         }
+    }
+
+    /**
+     * El cierre guarda un snapshot de la jornada y cierres_caja.fecha es UNIQUE: un cobro
+     * posterior al cierre no entra en el cierre ya guardado ni permite volver a cerrar el dia.
+     */
+    private fun confirmarCobroEnJornadaCerrada(orden: Orden): Boolean {
+        val fecha = cierreCajaService.fechaDeHoy()
+        val cierre = cierreCajaService.buscarPorFecha(fecha) ?: return true
+
+        println()
+        println("[AVISO] La jornada $fecha ya fue cerrada (cierre #${cierre.id}).")
+        println("Este cobro no quedará reflejado en ese cierre y la jornada no se puede")
+        println("volver a cerrar.")
+
+        if (leerConfirmacion("¿Cobrar de todas formas? (s/n): ")) {
+            return true
+        }
+
+        println("Cobro cancelado. La orden #${orden.id} queda pendiente en el menú 'Pagos'.")
+        return false
     }
 
     private fun cancelarOrden(orden: Orden) {
@@ -420,6 +461,210 @@ class MenuConsole(
             println("Orden #${orden.id} - ${orden.estado}")
             mostrarTotales(orden)
         }
+    }
+
+    private fun menuReportes() {
+        if (!validarPermiso(Permission.VIEW_REPORTS)) {
+            return
+        }
+
+        var continuar = true
+
+        while (continuar) {
+            println()
+            println("===== REPORTES =====")
+            println("1. Reporte de la jornada de hoy")
+            println("2. Reporte por rango de fechas")
+            println("0. Volver")
+
+            when (leerEntero("Seleccione una opción: ")) {
+                1 -> mostrarReporte(reporteService.generarReporteDelDia())
+                2 -> reportePorRango()
+                0 -> continuar = false
+                else -> println("Opción inválida.")
+            }
+        }
+    }
+
+    private fun reportePorRango() {
+        val desde = leerFecha("Fecha desde (yyyy-MM-dd): ")
+        val hasta = leerFecha("Fecha hasta (yyyy-MM-dd): ")
+
+        if (desde > hasta) {
+            println("La fecha inicial no puede ser posterior a la final.")
+            return
+        }
+
+        mostrarReporte(
+            reporteService.generarReporte(
+                desde = desde,
+                hasta = hasta
+            )
+        )
+    }
+
+    private fun mostrarReporte(reporte: Reporte) {
+        println()
+        println("===== REPORTE DE VENTAS =====")
+        println("Periodo: ${reporte.desde} a ${reporte.hasta}")
+
+        if (reporte.ordenesCerradas == 0) {
+            println("No hay ventas registradas en el periodo.")
+            return
+        }
+
+        println("Ingresos totales (con IVA): $%.2f".format(reporte.ingresosTotales))
+        println("Órdenes cerradas: ${reporte.ordenesCerradas}")
+        println("Ticket promedio: $%.2f".format(reporte.ticketPromedio))
+
+        println()
+        println("--- Productos más vendidos ---")
+        reporte.productosMasVendidos.forEachIndexed { indice, producto ->
+            println(
+                "%d. %-20s %4d u. $%9.2f".format(
+                    indice + 1,
+                    producto.nombre,
+                    producto.unidades,
+                    producto.total
+                )
+            )
+        }
+
+        println()
+        println("--- Ventas por categoría (sin IVA) ---")
+        reporte.ventasPorCategoria.forEach { venta ->
+            println(
+                "%-12s %4d u. $%9.2f".format(
+                    venta.categoria.name,
+                    venta.unidades,
+                    venta.total
+                )
+            )
+        }
+
+        println()
+        println("--- Ventas por método de pago ---")
+        reporte.ventasPorMetodoPago.forEach { venta ->
+            println(
+                "%-12s %4d %-8s $%9.2f".format(
+                    venta.metodoPago,
+                    venta.cantidadOrdenes,
+                    if (venta.cantidadOrdenes == 1) "orden" else "órdenes",
+                    venta.total
+                )
+            )
+        }
+    }
+
+    private fun menuCierreCaja() {
+        if (!validarPermiso(Permission.CLOSE_CASH_REGISTER)) {
+            return
+        }
+
+        var continuar = true
+
+        while (continuar) {
+            println()
+            println("===== CIERRE DE CAJA =====")
+            println("1. Realizar el cierre de la jornada de hoy")
+            println("2. Consultar cierres anteriores")
+            println("0. Volver")
+
+            when (leerEntero("Seleccione una opción: ")) {
+                1 -> realizarCierre()
+                2 -> consultarCierres()
+                0 -> continuar = false
+                else -> println("Opción inválida.")
+            }
+        }
+    }
+
+    private fun realizarCierre() {
+        val fecha = cierreCajaService.fechaDeHoy()
+        val existente = cierreCajaService.buscarPorFecha(fecha)
+
+        if (existente != null) {
+            println("La jornada $fecha ya fue cerrada.")
+            mostrarCierre(existente)
+            return
+        }
+
+        val usuarioId = Session.getCurrentUser()?.id ?: 0
+
+        val previo = cierreCajaService.previsualizarCierre(
+            fecha = fecha,
+            usuarioId = usuarioId
+        )
+
+        println()
+        println("--- VENTAS DE LA JORNADA $fecha ---")
+        println("Órdenes cobradas: ${previo.cantidadOrdenes}")
+        println("Ventas totales: $%.2f".format(previo.totalVentas))
+        println("Pagos en efectivo: $%.2f".format(previo.totalEfectivo))
+        println("Pagos con tarjeta: $%.2f".format(previo.totalTarjeta))
+        println("Efectivo esperado en caja: $%.2f".format(previo.efectivoEsperado))
+
+        val contado = leerMontoNoNegativo("Efectivo físico contado: $")
+        val cierre = previo.copy(efectivoContado = contado)
+
+        println()
+        println("Diferencia: ${formatearDiferencia(cierre.diferencia)}")
+        println("Resultado: ${cierre.estado}")
+
+        if (!leerConfirmacion("¿Guardar el cierre? (s/n): ")) {
+            println("Cierre descartado.")
+            return
+        }
+
+        val guardado = cierreCajaService.registrarCierre(
+            fecha = fecha,
+            usuarioId = usuarioId,
+            efectivoContado = contado
+        )
+
+        if (guardado == null) {
+            println("No se pudo guardar el cierre de caja.")
+            return
+        }
+
+        println("Cierre de caja registrado.")
+        mostrarCierre(guardado)
+    }
+
+    private fun consultarCierres() {
+        val cierres = cierreCajaService.obtenerCierres()
+
+        println()
+        println("===== CIERRES ANTERIORES =====")
+
+        if (cierres.isEmpty()) {
+            println("No hay cierres de caja registrados.")
+            return
+        }
+
+        cierres.forEach { mostrarCierre(it) }
+    }
+
+    private fun mostrarCierre(cierre: CierreCaja) {
+        println()
+        println("--- CIERRE #${cierre.id} | Jornada ${cierre.fecha} ---")
+        println("Registrado: ${cierre.fechaHora ?: "-"} | Usuario: ${cierre.usuarioId}")
+        println("Órdenes cobradas: ${cierre.cantidadOrdenes}")
+        println("Ventas totales: $%.2f".format(cierre.totalVentas))
+        println(
+            "Efectivo: $%.2f | Tarjeta: $%.2f".format(
+                cierre.totalEfectivo,
+                cierre.totalTarjeta
+            )
+        )
+        println(
+            "Esperado: $%.2f | Contado: $%.2f".format(
+                cierre.efectivoEsperado,
+                cierre.efectivoContado
+            )
+        )
+        println("Diferencia: ${formatearDiferencia(cierre.diferencia)}")
+        println("Estado: ${cierre.estado}")
     }
 
     private fun mostrarCarrito() {
@@ -506,6 +751,46 @@ class MenuConsole(
                 "n", "no" -> return false
                 else -> println("Responda s/n.")
             }
+        }
+    }
+
+    private fun formatearDiferencia(diferencia: Double): String {
+        return if (diferencia < 0) {
+            "-$%.2f".format(-diferencia)
+        } else {
+            "$%.2f".format(diferencia)
+        }
+    }
+
+    private fun leerFecha(mensaje: String): String {
+        while (true) {
+            try {
+                return LocalDate.parse(leerTexto(mensaje)).toString()
+            } catch (_: DateTimeParseException) {
+                println("Ingrese una fecha válida con formato yyyy-MM-dd.")
+            }
+        }
+    }
+
+    private fun leerMontoNoNegativo(mensaje: String): Double {
+        while (true) {
+            val monto = leerDouble(mensaje)
+
+            if (monto >= 0) {
+                return monto
+            }
+
+            println("El monto no puede ser negativo.")
+        }
+    }
+
+    private fun validarPermiso(permission: Permission): Boolean {
+        return try {
+            Session.validatePermission(permission)
+            true
+        } catch (exception: PermissionDeniedException) {
+            println("Acceso denegado: ${exception.message}")
+            false
         }
     }
 
