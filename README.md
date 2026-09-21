@@ -1,5 +1,12 @@
 # Coffee Time
 
+Integrantes:
+Erick Eduardo Fuentes García FG220265
+Luis Gustavo Hernández Rivas HR233189
+Jairo José Hernández Abrego HA190640
+William Alejandro Ortíz Artiga OA222716
+César Elías González Rodas GR220764
+
 Aplicación de gestión de cafetería en consola (proyecto universitario). Cubre el ciclo completo de operación de un local: autenticación con PIN y roles, catálogo de productos, carrito de órdenes, cobro en efectivo o tarjeta, control de inventario con alertas de stock crítico, reportes de ventas y cierre de caja diario.
 
 Todo corre sobre una interfaz de texto y persiste en una base SQLite local (`data/coffeetime.db`). El objetivo académico es aplicar POO (herencia, abstracción, polimorfismo, interfaces/estrategias), validaciones, manejo de excepciones y control de acceso basado en roles.
