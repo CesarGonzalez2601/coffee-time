@@ -11,14 +11,14 @@ Entrega: 18/10/2026. Seguimiento en la [milestone](https://github.com/CesarGonza
 | Issue | Qué | Estado |
 | --- | --- | --- |
 | #7 | Base del proyecto Android (este esqueleto) | listo |
-| #8 | Usuarios en Room + login real | pendiente |
+| #8 | Usuarios en Room + login real | listo |
 | #9 | Login con PinPad | pendiente |
 | #10 | Registro con validaciones | pendiente |
 | #11 | Navegación por rol + Inicio | pendiente |
 | #12 | PDF APA 7 | pendiente |
 | #13 | Integración y video | pendiente |
 
-Hoy las pantallas son placeholders conectados por la navegación, y los usuarios viven en un repositorio en memoria (`FakeUserRepository`) hasta que #8 los pase a Room.
+Hoy las pantallas son placeholders conectados por la navegación. Los usuarios ya se guardan en Room; las pantallas de login y registro (#9, #10) son las que los usan.
 
 ## Tech stack
 
@@ -60,6 +60,7 @@ sdk.dir=C\:\\Users\\<tu-usuario>\\AppData\\Local\\Android\\Sdk
 ./gradlew assembleDebug   # genera el APK de debug
 ./gradlew installDebug    # lo instala en el emulador/teléfono conectado
 ./gradlew test            # tests JVM (sin emulador)
+./gradlew connectedDebugAndroidTest  # tests de Room en el emulador/teléfono
 ./gradlew lint
 ```
 
@@ -74,6 +75,8 @@ Si `java` no está en el `PATH`, apunta `JAVA_HOME` al JDK de Android Studio (`<
 
 `1234` ya no sirve: cuenta como PIN débil.
 
+Se crean la primera vez que la app abre la base (`UserSeedCallback`). Los usuarios que registres se quedan guardados; para volver a solo estos dos, borra los datos de la app (*Ajustes → Apps → Coffee Time → Almacenamiento → Borrar datos*) o desinstálala.
+
 ## Arquitectura
 
 Tres capas. La UI nunca toca la base de datos: siempre le pide al dominio.
@@ -81,7 +84,7 @@ Tres capas. La UI nunca toca la base de datos: siempre le pide al dominio.
 ```mermaid
 flowchart TD
     UI["ui/<br/>Composables + ViewModels"] --> Domain["domain/<br/>modelos, servicios, interfaces de repositorio"]
-    Data["data/<br/>Room (#8) y FakeUserRepository"] -. implementa .-> Domain
+    Data["data/<br/>Room y FakeUserRepository"] -. implementa .-> Domain
     App["CoffeeTimeApp<br/>AppContainer"] --> UI
     App --> Data
 ```
@@ -97,7 +100,9 @@ app/src/main/java/com/coffeetime/
 │   ├── repository/         UserRepository (funciones suspend)
 │   ├── security/           PinSecurity (PBKDF2WithHmacSHA256, 120k iteraciones)
 │   └── service/            AuthenticationService, Session
-├── data/fake/              FakeUserRepository (en memoria, con los usuarios de prueba)
+├── data/
+│   ├── local/              Room: UserEntity, UserDao, AppDatabase, seed, UserRepositoryRoom
+│   └── fake/               FakeUserRepository (en memoria, para tests JVM)
 └── ui/
     ├── theme/              Color, Theme, Type, Shape, Dimens (design system)
     ├── navigation/         Routes.kt + CoffeeTimeNavHost.kt
@@ -122,6 +127,16 @@ Al entrar a `Main` se borra el historial (`popUpTo(Login) { inclusive = true }`)
 ### Roles y permisos
 
 `User.hasPermission(Permission)` decide todo. `Administrator` tiene todos los permisos; `Cashier` solo `CREATE_ORDER` y `PROCESS_PAYMENT`. `Session.validatePermission` lanza `PermissionDeniedException`.
+
+### Login y registro
+
+`AuthenticationService` es la única entrada:
+
+- `login(userId, pin)` valida y, si es correcto, inicia la `Session`.
+- `register(name, pin)` crea siempre un **cajero** y devuelve el `User` con su ID nuevo. Las validaciones de la pantalla (nombre, PIN débil, confirmación) van antes, en el ViewModel de Registro.
+- `logout()` limpia la sesión.
+
+La base no tiene migraciones: si cambia el esquema, se borra y se vuelve a crear con los usuarios de prueba.
 
 ## Diseño
 
