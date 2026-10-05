@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Coffee Time</string>
+
+    <!-- Login -->
+    <string name="login_title">Coffee Time</string>
+    <string name="login_subtitle">Ingresa tu ID y PIN para abrir caja.</string>
+    <string name="login_create_account">¿Eres nuevo? Crear cuenta</string>
+    <string name="login_demo_enter">Entrar (demo)</string>
+
+    <!-- Registro -->
+    <string name="registro_title">Crear cuenta</string>
+    <string name="registro_demo_finish">Terminar registro (demo)</string>
+    <string name="registro_exito_title">Cuenta creada</string>
+    <string name="registro_exito_message">Tu ID es %1$d. Guárdalo para iniciar sesión.</string>
+    <string name="registro_exito_go_login">Ir a login</string>
+
+    <!-- Destinos principales -->
+    <string name="nav_inicio">Inicio</string>
+    <string name="nav_ordenes">Órdenes</string>
+    <string name="nav_pagos">Pagos</string>
+    <string name="nav_inventario">Inventario</string>
+    <string name="nav_mas">Más</string>
+
+    <!-- Comunes -->
+    <string name="placeholder_en_construccion">Pantalla en construcción</string>
+    <string name="action_back">Volver</string>
+    <string name="action_logout">Cerrar sesión</string>
+</resources>
