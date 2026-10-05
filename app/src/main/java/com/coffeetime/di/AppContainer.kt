@@ -1,6 +1,8 @@
 package com.coffeetime.di
 
-import com.coffeetime.data.fake.FakeUserRepository
+import android.content.Context
+import com.coffeetime.data.local.AppDatabase
+import com.coffeetime.data.local.UserRepositoryRoom
 import com.coffeetime.domain.repository.UserRepository
 import com.coffeetime.domain.service.AuthenticationService
 import com.coffeetime.domain.service.Session
@@ -12,18 +14,26 @@ interface AppContainer {
     val session: Session
 }
 
-class DefaultAppContainer : AppContainer {
+class DefaultAppContainer(
+    private val context: Context
+) : AppContainer {
 
-    // #8 reemplaza esto por el repositorio de Room.
-    override val userRepository: UserRepository by lazy {
-        FakeUserRepository()
+    private val database: AppDatabase by lazy {
+        AppDatabase.build(context)
     }
 
-    override val authenticationService: AuthenticationService by lazy {
-        AuthenticationService(
-            userRepository = userRepository
+    override val userRepository: UserRepository by lazy {
+        UserRepositoryRoom(
+            userDao = database.userDao()
         )
     }
 
     override val session: Session = Session()
+
+    override val authenticationService: AuthenticationService by lazy {
+        AuthenticationService(
+            userRepository = userRepository,
+            session = session
+        )
+    }
 }

@@ -8,4 +8,11 @@ interface Authenticatable {
         userId: Int,
         pin: String
     ): User
+
+    suspend fun register(
+        name: String,
+        pin: String
+    ): User
+
+    fun logout()
 }
