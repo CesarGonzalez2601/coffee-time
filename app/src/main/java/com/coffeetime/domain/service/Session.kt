@@ -25,7 +25,7 @@ class Session {
         )
     }
 
-    fun close() {
+    fun logout() {
 
         _currentUser.value?.let { user ->
             Log.i(
