@@ -1,514 +1,135 @@
 # Coffee Time
 
-Aplicación de gestión de cafetería en consola (proyecto universitario). Cubre el ciclo completo de operación de un local: autenticación con PIN y roles, catálogo de productos, carrito de órdenes, cobro en efectivo o tarjeta, control de inventario con alertas de stock crítico, reportes de ventas y cierre de caja diario.
+App Android de caja para una cafetería (proyecto universitario). La usan el **cajero** (tomar órdenes y cobrar) y el **administrador** (inventario, reportes y cierre de caja). Hecha con Kotlin, Jetpack Compose y Material 3.
 
-Todo corre sobre una interfaz de texto y persiste en una base SQLite local (`data/coffeetime.db`). El objetivo académico es aplicar POO (herencia, abstracción, polimorfismo, interfaces/estrategias), validaciones, manejo de excepciones y control de acceso basado en roles.
+> La versión de consola (Etapa 2: Kotlin/JVM + SQLite JDBC) quedó guardada en el tag [`etapa-2`](https://github.com/CesarGonzalez2601/coffee-time/tree/etapa-2). Desde la Etapa 3 el repo es un proyecto de Android Studio.
 
-## Funcionalidades
+## Estado: Etapa 3 · Avance 1
 
-| Módulo | Qué hace |
-| --- | --- |
-| Autenticación | Login por ID + PIN. PIN guardado como hash PBKDF2, nunca en texto plano |
-| Roles | `ADMINISTRATOR` (todos los permisos) y `CASHIER` (crear orden, procesar pago) |
-| Órdenes | Carrito en memoria: agregar, modificar cantidad, eliminar, ver desglose, confirmar |
-| Pagos | Efectivo (con cálculo de cambio) o tarjeta. Genera correlativo por pago |
-| Inventario | Listado por categoría, stock crítico (<= 5), entradas, salidas, ajuste manual, alta y baja de productos |
-| Reportes | Reporte de la jornada o por rango de fechas: ingresos, ticket promedio, productos más vendidos, ventas por categoría y por método de pago |
-| Cierre de caja | Previsualización, conteo de efectivo y estado `CUADRADA` / `FALTANTE` / `SOBRANTE` |
+Entrega: 18/10/2026. Seguimiento en la [milestone](https://github.com/CesarGonzalez2601/coffee-time/milestone/1).
+
+| Issue | Qué | Estado |
+| --- | --- | --- |
+| #7 | Base del proyecto Android (este esqueleto) | listo |
+| #8 | Usuarios en Room + login real | pendiente |
+| #9 | Login con PinPad | pendiente |
+| #10 | Registro con validaciones | pendiente |
+| #11 | Navegación por rol + Inicio | pendiente |
+| #12 | PDF APA 7 | pendiente |
+| #13 | Integración y video | pendiente |
+
+Hoy las pantallas son placeholders conectados por la navegación, y los usuarios viven en un repositorio en memoria (`FakeUserRepository`) hasta que #8 los pase a Room.
 
 ## Tech stack
 
-| Componente | Versión / detalle |
+Todas las versiones están fijas en [`gradle/libs.versions.toml`](gradle/libs.versions.toml). No las cambies en tu rama.
+
+| Pieza | Qué usamos |
 | --- | --- |
-| Lenguaje | Kotlin 2.3.21 (JVM) |
-| Toolchain | JDK 17 (`jvmToolchain(17)`, resuelto por foojay-resolver) |
-| Build | Gradle 9.3.0 con Kotlin DSL (`build.gradle.kts`) |
-| Persistencia | SQLite vía `org.xerial:sqlite-jdbc:3.53.4.0` — JDBC plano, sin ORM |
-| Tests | `kotlin("test")` sobre JUnit Platform |
-| Interfaz | Consola (stdin/stdout, salida en español) |
+| Lenguaje | Kotlin (JDK 17 para compilar) |
+| UI | Jetpack Compose + Material 3 |
+| Navegación | Navigation Compose type-safe (`@Serializable`) |
+| Estado | ViewModel (MVVM) |
+| Base de datos | Room (SQLite local, un solo dispositivo) |
+| DI | Manual, en `AppContainer` |
+| Logs | `android.util.Log` (Logcat) |
+| Android | minSdk 26 (Android 8.0), compile/targetSdk 37 |
 
-Sin frameworks de DI: las dependencias se cablean a mano en `main()`.
-
-## Inicializar el proyecto
+## Correr el proyecto
 
 ### Requisitos
 
-- JDK 17 o superior disponible como `JAVA_HOME`.
-- No hace falta instalar Gradle: el repo incluye el wrapper (`gradlew` / `gradlew.bat`).
+- [Android Studio](https://developer.android.com/studio) (trae el SDK, el emulador y un JDK).
+- Nada más: el repo incluye el Gradle wrapper.
 
-Si `java` no está en el `PATH`, apuntá `JAVA_HOME` a un JDK antes de usar el wrapper. Por ejemplo, con el runtime que trae IntelliJ:
+### Desde Android Studio
 
-```powershell
-# PowerShell (Windows)
-$env:JAVA_HOME = "C:/Program Files/JetBrains/IntelliJ IDEA 2026.2.3/jbr"
+1. `File → Open` y elige la carpeta del repo.
+2. Espera el *Gradle sync*.
+3. Elige un emulador o teléfono y dale *Run ▶*.
+
+### Desde la terminal
+
+Android Studio crea `local.properties` con la ruta del SDK. Si usas solo la terminal, créalo tú:
+
+```properties
+sdk.dir=C\:\\Users\\<tu-usuario>\\AppData\\Local\\Android\\Sdk
 ```
 
 ```bash
-# Bash / macOS / Linux
-export JAVA_HOME=/ruta/a/jdk-17
+./gradlew assembleDebug   # genera el APK de debug
+./gradlew installDebug    # lo instala en el emulador/teléfono conectado
+./gradlew test            # tests JVM (sin emulador)
+./gradlew lint
 ```
 
-### Clonar y ejecutar
+Si `java` no está en el `PATH`, apunta `JAVA_HOME` al JDK de Android Studio (`<Android Studio>/jbr`).
 
-```bash
-git clone https://github.com/CesarGonzalez2601/coffee-time.git
-cd coffee-time
-
-./gradlew run -q --console=plain     # inicia la app (Windows: .\gradlew.bat run -q --console=plain)
-```
-
-> **Ejecutá siempre desde la raíz del repo.** `DatabaseManager` escribe `data/coffeetime.db` y `Logger` escribe `logs/errors.txt` con rutas relativas; desde otro directorio la app crea una segunda base.
-
-La primera ejecución crea el esquema (`CREATE TABLE IF NOT EXISTS`, idempotente), inserta 6 productos de ejemplo y siembra dos usuarios:
+### Usuarios de prueba
 
 | ID | PIN | Rol |
 | --- | --- | --- |
-| 1 | `1234` | ADMINISTRATOR |
-| 2 | `4321` | CASHIER |
+| 1 | `2580` | Administrador |
+| 2 | `1397` | Cajero |
 
-Cambiá esos PIN antes de usar el proyecto en cualquier entorno real: están en el código fuente (`Main.kt`) y son públicos.
-
-### Otros comandos
-
-```bash
-./gradlew build           # compila + corre tests
-./gradlew compileKotlin   # solo compila (feedback más rápido)
-./gradlew test            # tests (JUnit Platform)
-./gradlew clean           # limpia build/
-```
-
-Para empezar de cero, borrá `data/coffeetime.db` y volvé a ejecutar.
+`1234` ya no sirve: cuenta como PIN débil.
 
 ## Arquitectura
 
-Capas: la UI nunca toca SQL y los repositorios nunca contienen reglas de negocio.
+Tres capas. La UI nunca toca la base de datos: siempre le pide al dominio.
 
 ```mermaid
 flowchart TD
-    Main["Main.kt<br/>cableado + login"] --> Menu["MenuConsole<br/>UI de consola"]
-    Menu --> Svc["Services<br/>reglas de negocio"]
-    Svc --> Repo["Repositories<br/>SQL parametrizado"]
-    Repo --> DBM["DatabaseManager<br/>conexiones + esquema"]
-    DBM --> DB[("data/coffeetime.db")]
-    Svc --> Log["Logger<br/>logs/errors.txt"]
+    UI["ui/<br/>Composables + ViewModels"] --> Domain["domain/<br/>modelos, servicios, interfaces de repositorio"]
+    Data["data/<br/>Room (#8) y FakeUserRepository"] -. implementa .-> Domain
+    App["CoffeeTimeApp<br/>AppContainer"] --> UI
+    App --> Data
 ```
 
-### Estructura del proyecto
-
 ```
-coffee-time/
-├── build.gradle.kts              # plugins, dependencias, tarea run (stdin + UTF-8)
-├── settings.gradle.kts           # rootProject.name = "CoffeeTime", foojay-resolver
-├── gradle.properties             # kotlin.code.style=official
-├── gradlew / gradlew.bat         # wrapper: no hace falta instalar Gradle
-├── gradle/wrapper/               # gradle-wrapper.jar + .properties (Gradle 9.3.0)
-├── CLAUDE.md                     # guía para agentes de IA que tocan el repo
-├── README.md
-│
-├── data/
-│   └── coffeetime.db             # base SQLite, se crea sola en el primer arranque
-├── logs/
-│   └── errors.txt                # log de Logger: [timestamp] [LEVEL] mensaje
-│
-├── build/                        # salida de compilación (ignorada por git)
-│
-└── src/
-    ├── main/kotlin/com/coffeetime/
-    │   ├── Main.kt               # entrypoint: init DB, cablea dependencias, login
-    │   │
-    │   ├── model/                # entidades y enums, sin lógica de persistencia
-    │   │   ├── User.kt           # abstracta; Administrator.kt / Cashier.kt la extienden
-    │   │   ├── Administrator.kt
-    │   │   ├── Cashier.kt
-    │   │   ├── Role.kt           # enum ADMINISTRATOR | CASHIER
-    │   │   ├── Permission.kt     # enum de 7 permisos
-    │   │   ├── Credentials.kt    # pinHash + pinSalt
-    │   │   ├── Producto.kt
-    │   │   ├── CategoriaProducto.kt
-    │   │   ├── Orden.kt          # subtotal / impuesto / total son getters derivados
-    │   │   ├── DetalleOrden.kt
-    │   │   ├── EstadoOrden.kt
-    │   │   ├── Pago.kt
-    │   │   ├── MetodoPago.kt     # interfaz de estrategia de pago
-    │   │   ├── PagoEfectivo.kt
-    │   │   ├── PagoTarjeta.kt
-    │   │   ├── MovimientoInventario.kt  # + enum TipoMovimiento
-    │   │   ├── CierreCaja.kt     # + enum EstadoCierre
-    │   │   └── Reporte.kt        # + ProductoVendido, VentaPorCategoria, VentaPorMetodoPago
-    │   │
-    │   ├── repository/           # acceso a datos, SQL parametrizado
-    │   │   ├── UserRepository.kt          # única interfaz de repositorio
-    │   │   ├── UserRepositorySQLite.kt
-    │   │   ├── ProductoRepositorySQLite.kt
-    │   │   ├── InventarioRepositorySQLite.kt
-    │   │   ├── ReporteRepositorySQLite.kt
-    │   │   └── CierreCajaRepositorySQLite.kt
-    │   │
-    │   ├── service/              # reglas de negocio y transacciones
-    │   │   ├── Authenticatable.kt
-    │   │   ├── AuthenticationService.kt
-    │   │   ├── Session.kt        # singleton del usuario logueado + validatePermission
-    │   │   ├── OrdenService.kt   # carrito en memoria + transacciones de orden
-    │   │   ├── PagoService.kt
-    │   │   ├── InventarioService.kt
-    │   │   ├── ReporteService.kt
-    │   │   └── CierreCajaService.kt
-    │   │
-    │   ├── database/
-    │   │   └── DatabaseManager.kt  # conexiones, PRAGMA foreign_keys, todo el DDL
-    │   │
-    │   ├── util/
-    │   │   ├── MenuConsole.kt    # menús, lectura validada de entrada
-    │   │   ├── Logger.kt
-    │   │   └── PinSecurity.kt    # PBKDF2WithHmacSHA256, 120k iteraciones
-    │   │
-    │   └── exception/            # excepciones propias del dominio
-    │       ├── IncorrectPinException.kt
-    │       ├── InvalidInputException.kt
-    │       ├── PermissionDeniedException.kt
-    │       └── UserNotFoundException.kt
-    │
-    └── test/                     # aún no existe; el build ya está configurado para JUnit
+app/src/main/java/com/coffeetime/
+├── CoffeeTimeApp.kt        Application; crea el AppContainer
+├── MainActivity.kt         setContent { CoffeeTimeTheme { CoffeeTimeNavHost() } }
+├── di/AppContainer.kt      dependencias conectadas a mano
+├── domain/
+│   ├── model/              User (abstracta), Administrator, Cashier, Role, Permission, Credentials
+│   ├── exception/          IncorrectPin, InvalidInput, PermissionDenied, UserNotFound
+│   ├── repository/         UserRepository (funciones suspend)
+│   ├── security/           PinSecurity (PBKDF2WithHmacSHA256, 120k iteraciones)
+│   └── service/            AuthenticationService, Session
+├── data/fake/              FakeUserRepository (en memoria, con los usuarios de prueba)
+└── ui/
+    ├── theme/              Color, Theme, Type, Shape, Dimens (design system)
+    ├── navigation/         Routes.kt + CoffeeTimeNavHost.kt
+    ├── common/             PlaceholderScreen
+    ├── login/  registro/  main/
 ```
 
-Resumen por paquete:
-
-| Paquete | Rol en la arquitectura |
-| --- | --- |
-| `model` | Entidades, enums y estrategias. Sin SQL ni I/O |
-| `repository` | Un método = una operación SQL con `PreparedStatement` |
-| `service` | Reglas de negocio, transacciones manuales, orquestación entre repos |
-| `database` | Conexiones (`getConnection`) y esquema (`initialize`) |
-| `util` | UI de consola, logging y hashing de PIN |
-| `exception` | Errores de dominio, todos extienden `Exception` |
-
-Carpetas generadas en tiempo de ejecución o por el IDE (`build/`, `.gradle/`, `.kotlin/`, `.idea/` parcial) están en `.gitignore`. `data/coffeetime.db` y `logs/errors.txt` **sí** están versionados: el log cambia en cada ejecución, revisá `git status` antes de commitear.
-
-### Ciclo de vida de una orden
+### Navegación
 
 ```mermaid
-stateDiagram-v2
-    [*] --> ABIERTA: agregar al carrito
-    ABIERTA --> CONFIRMADA: confirmarOrden()
-    CONFIRMADA --> PAGADA: registrarPago()
-    CONFIRMADA --> CANCELADA: cancelarOrden()
-    PAGADA --> [*]
-    CANCELADA --> [*]
+flowchart LR
+    Login -->|Crear cuenta| Registro --> RegistroExito -->|Ir a login| Login
+    Login -->|ID y PIN correctos| Main
+    Main -->|Cerrar sesión| Login
+    subgraph Main
+        Inicio --- Ordenes --- Pagos --- Inventario --- Mas
+    end
 ```
 
-`ABIERTA` es solo el carrito en memoria (id `0`), nunca se persiste. El stock se descuenta al agregar al carrito, no al pagar: `reducirStock` usa `WHERE id = ? AND stock >= ?` como chequeo de disponibilidad, y modificar, eliminar o cancelar devuelve la diferencia.
+Al entrar a `Main` se borra el historial (`popUpTo(Login) { inclusive = true }`), así el botón atrás no vuelve al login.
 
-## Diagrama de clases
+### Roles y permisos
 
-### Autenticación y usuarios
+`User.hasPermission(Permission)` decide todo. `Administrator` tiene todos los permisos; `Cashier` solo `CREATE_ORDER` y `PROCESS_PAYMENT`. `Session.validatePermission` lanza `PermissionDeniedException`.
 
-```mermaid
-classDiagram
-    class User {
-        <<abstract>>
-        +Int id
-        +String name
-        +Boolean active
-        +Role role
-        +hasPermission(Permission) Boolean
-    }
-    class Administrator {
-        +hasPermission(Permission) Boolean
-    }
-    class Cashier {
-        +hasPermission(Permission) Boolean
-    }
-    class Role {
-        <<enumeration>>
-        ADMINISTRATOR
-        CASHIER
-    }
-    class Permission {
-        <<enumeration>>
-        MANAGE_USERS
-        MANAGE_PRODUCTS
-        CREATE_ORDER
-        PROCESS_PAYMENT
-        ADJUST_INVENTORY
-        VIEW_REPORTS
-        CLOSE_CASH_REGISTER
-    }
-    class Credentials {
-        +String pinHash
-        +String pinSalt
-    }
-    class Authenticatable {
-        <<interface>>
-        +login(Int, String) User
-    }
-    class AuthenticationService {
-        +login(Int, String) User
-    }
-    class Session {
-        <<singleton>>
-        +start(User)
-        +close()
-        +getCurrentUser() User
-        +validatePermission(Permission)
-    }
-    class UserRepository {
-        <<interface>>
-        +create(...) User
-        +findById(Int) User
-        +getCredentials(Int) Credentials
-        +findAll() List~User~
-    }
-    class PinSecurity {
-        <<object>>
-        +generateSalt() String
-        +hashPin(String, String) String
-        +verifyPin(...) Boolean
-    }
+## Diseño
 
-    User <|-- Administrator
-    User <|-- Cashier
-    User --> Role
-    User ..> Permission
-    Authenticatable <|.. AuthenticationService
-    UserRepository <|.. UserRepositorySQLite
-    AuthenticationService --> UserRepository
-    AuthenticationService ..> PinSecurity
-    UserRepository ..> Credentials
-    Session --> User
-```
+La UI sigue el [design system de Coffee Time](https://claude.ai/artifact/Mccf9QuFCj8k9TAcb1EnpY): tonos de café, Fraunces para títulos, Figtree para el resto, botones en píldora. Fuentes bajo SIL OFL 1.1 (ver [`licenses/`](licenses/)).
 
-### Órdenes y pagos
+## Reglas del equipo
 
-```mermaid
-classDiagram
-    class Producto {
-        +Int id
-        +String nombre
-        +Double precio
-        +CategoriaProducto categoria
-        +Int stock
-    }
-    class DetalleOrden {
-        +Producto producto
-        +Int cantidad
-        +Double subtotalItem
-    }
-    class Orden {
-        +Int id
-        +EstadoOrden estado
-        +Double subtotal
-        +Double impuesto
-        +Double total
-    }
-    class EstadoOrden {
-        <<enumeration>>
-        ABIERTA
-        CONFIRMADA
-        PAGADA
-        CANCELADA
-    }
-    class MetodoPago {
-        <<interface>>
-        +String tipo
-        +procesarPago(Double) Boolean
-        +obtenerDetalle() String
-    }
-    class PagoEfectivo {
-        +Double cambio
-    }
-    class PagoTarjeta
-    class Pago {
-        +Int ordenId
-        +Double totalPagado
-        +LocalDateTime fechaHora
-        +String correlativo
-    }
-    class OrdenService {
-        +agregarProductoAlCarrito(...)
-        +modificarCantidadEnCarrito(...)
-        +eliminarDelCarrito(...)
-        +confirmarOrden(...) Orden
-        +procesarPagoYConfirmarOrden(...)
-        +cancelarOrden(...)
-    }
-    class PagoService {
-        +registrarPago(Pago, Orden) Boolean
-    }
-    class ProductoRepositorySQLite {
-        +obtenerProductos() List~Producto~
-        +reducirStock(...) Boolean
-        +incrementarStock(...) Boolean
-    }
-
-    Orden "1" *-- "n" DetalleOrden
-    DetalleOrden --> Producto
-    Orden --> EstadoOrden
-    MetodoPago <|.. PagoEfectivo
-    MetodoPago <|.. PagoTarjeta
-    Pago --> MetodoPago
-    OrdenService --> Orden
-    OrdenService --> ProductoRepositorySQLite
-    PagoService ..> Pago
-    PagoService --> OrdenService
-```
-
-`Orden.subtotal`, `impuesto` (IVA 10%) y `total` son getters derivados de `DetalleOrden.subtotalItem`; solo `ordenes.total` se persiste.
-
-### Inventario, reportes y cierre de caja
-
-```mermaid
-classDiagram
-    class MovimientoInventario {
-        +Int productoId
-        +TipoMovimiento tipo
-        +Int cantidad
-        +String motivo
-    }
-    class TipoMovimiento {
-        <<enumeration>>
-        ENTRADA
-        SALIDA
-        AJUSTE
-    }
-    class InventarioService {
-        +consultarStock(Int) Int
-        +aumentarStock(...) Boolean
-        +disminuirStock(...) Boolean
-        +ajusteManual(...) Boolean
-        +descontarStockPorVenta(Orden) Boolean
-        +obtenerProductosCriticos() List~Producto~
-    }
-    class Reporte {
-        +String desde
-        +String hasta
-        +Double ingresosTotales
-        +Int ordenesCerradas
-        +Double ticketPromedio
-    }
-    class ProductoVendido
-    class VentaPorCategoria
-    class VentaPorMetodoPago
-    class ReporteService {
-        +generarReporteDelDia() Reporte
-        +generarReporte(String, String) Reporte
-    }
-    class CierreCaja {
-        +String fecha
-        +Int usuarioId
-        +Double totalVentas
-        +Double efectivoContado
-        +Double diferencia
-        +EstadoCierre estado
-    }
-    class EstadoCierre {
-        <<enumeration>>
-        CUADRADA
-        FALTANTE
-        SOBRANTE
-    }
-    class CierreCajaService {
-        +previsualizarCierre(...) CierreCaja
-        +registrarCierre(...) CierreCaja
-        +buscarPorFecha(String) CierreCaja
-    }
-
-    MovimientoInventario --> TipoMovimiento
-    InventarioService --> InventarioRepositorySQLite
-    InventarioService ..> MovimientoInventario
-    Reporte "1" o-- "n" ProductoVendido
-    Reporte "1" o-- "n" VentaPorCategoria
-    Reporte "1" o-- "n" VentaPorMetodoPago
-    ReporteService --> ReporteRepositorySQLite
-    ReporteService ..> Reporte
-    CierreCaja --> EstadoCierre
-    CierreCajaService --> CierreCajaRepositorySQLite
-    CierreCajaService --> ReporteRepositorySQLite
-```
-
-`InventarioService.descontarStockPorVenta` solo escribe filas de auditoría en `movimientos_inventario` y dispara alertas de stock crítico: no vuelve a tocar `productos.stock`, porque el descuento ya ocurrió al armar el carrito.
-
-## Modelo de datos (ER)
-
-```mermaid
-erDiagram
-    users ||--o{ cierres_caja : registra
-    productos ||--o{ detalle_ordenes : aparece_en
-    productos ||--o{ movimientos_inventario : tiene
-    ordenes ||--o{ detalle_ordenes : contiene
-    ordenes ||--o{ pagos : cobrada_con
-
-    users {
-        INTEGER id PK
-        TEXT name
-        TEXT pin_hash
-        TEXT pin_salt
-        TEXT role
-        INTEGER active
-        TEXT created_at
-    }
-    productos {
-        INTEGER id PK
-        TEXT nombre
-        REAL precio
-        TEXT categoria
-        INTEGER stock
-    }
-    ordenes {
-        INTEGER id PK
-        TEXT fecha
-        TEXT estado
-        REAL total
-    }
-    detalle_ordenes {
-        INTEGER id PK
-        INTEGER orden_id FK
-        INTEGER producto_id FK
-        INTEGER cantidad
-        REAL subtotal
-    }
-    pagos {
-        INTEGER id PK
-        INTEGER orden_id FK
-        REAL total_pagado
-        TEXT metodo_pago
-        TEXT correlativo
-        TEXT fecha_hora
-    }
-    movimientos_inventario {
-        INTEGER id PK
-        INTEGER producto_id FK
-        TEXT tipo
-        INTEGER cantidad
-        TEXT motivo
-        TEXT fecha
-    }
-    cierres_caja {
-        INTEGER id PK
-        TEXT fecha UK
-        INTEGER usuario_id FK
-        INTEGER cantidad_ordenes
-        REAL total_ventas
-        REAL total_efectivo
-        REAL total_tarjeta
-        REAL efectivo_contado
-        TEXT fecha_hora
-    }
-```
-
-Todo el DDL vive en `DatabaseManager.initialize()`; no hay archivos de migración. Agregar una tabla significa agregar un `private fun createXTable(connection)` y llamarlo desde `initialize()`.
-
-Las claves foráneas se activan por conexión con `PRAGMA foreign_keys = ON` dentro de `getConnection()`: cualquier código que abra una conexión por fuera de ese método pierde la validación de FK.
-
-## Convenciones
-
-- **El código es bilingüe**: la infraestructura de autenticación está en inglés (`User`, `Role`, `Permission`, `Session`) y el dominio de la cafetería en español (`Producto`, `Orden`, `Pago`, `InventarioService`), incluidas las tablas y toda la salida de consola. Respetá el idioma del módulo que estés tocando.
-- SQL siempre parametrizado con `?`, nunca interpolado en strings.
-- Entrada de consola vía `MenuConsole.leerEntero` / `leerDouble` / `leerTexto` / `leerConfirmacion`, que repiten hasta recibir un valor válido. No uses `readln()` directo en el menú.
-- Los servicios devuelven `Boolean` y loguean con `Logger` para fallos esperados (stock, validaciones); lanzar excepción se reserva para autenticación y permisos.
-- Estilo `kotlin.code.style=official`, argumentos nombrados uno por línea en llamadas de varios parámetros.
-
-## Flujo de trabajo Git
-
-Proyecto en equipo. El trabajo se hace en ramas `feature/<nombre>` que se integran a `main` mediante Pull Request; también existen las ramas `dev` y `uat`.
-
-Ejecutar la app ensucia el árbol de trabajo: `logs/errors.txt` está versionado y cada login le agrega líneas. No mezcles ese ruido con cambios no relacionados.
+- Cada quien trabaja en `feature/<tema>` y abre PR hacia `dev`. `dev` pasa a `main` cuando todo está probado.
+- Textos en `res/values/strings.xml`, en español con **tuteo** ("Ingresa tu PIN"). Nunca escritos directo en un Composable.
+- Colores, fuentes y tamaños salen de `MaterialTheme` y de `Space` / `Size`. Nada de colores a mano.
+- Versiones de librerías solo en `libs.versions.toml`.
