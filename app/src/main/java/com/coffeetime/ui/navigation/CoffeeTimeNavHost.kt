@@ -1,12 +1,18 @@
 package com.coffeetime.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.coffeetime.CoffeeTimeApp
+import com.coffeetime.domain.service.Session
 import com.coffeetime.ui.login.LoginScreen
 import com.coffeetime.ui.main.MainScreen
 import com.coffeetime.ui.registro.RegistroExitoScreen
@@ -15,8 +21,15 @@ import com.coffeetime.ui.registro.RegistroScreen
 @Composable
 fun CoffeeTimeNavHost(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    session: Session? = null
 ) {
+    val context = LocalContext.current
+    val appSession = remember(session, context) {
+        session ?: (context.applicationContext as? CoffeeTimeApp)?.container?.session ?: Session()
+    }
+    val currentUser by appSession.currentUser.collectAsState()
+
     NavHost(
         navController = navController,
         startDestination = Login,
@@ -59,7 +72,9 @@ fun CoffeeTimeNavHost(
 
         composable<Main> {
             MainScreen(
+                user = currentUser,
                 onLogout = {
+                    appSession.logout()
                     navController.navigate(Login) {
                         popUpTo(Main) { inclusive = true }
                     }
