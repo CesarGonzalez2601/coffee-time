@@ -43,3 +43,17 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+### Android ###
+local.properties
+captures/
+*.apk
+*.aab
+.externalNativeBuild
+.cxx
+.idea/gradle.xml
+.idea/workspace.xml
+.idea/caches/
+.idea/deploymentTargetSelector.xml
+.idea/deploymentTargetDropDown.xml
+.idea/appInsightsSettings.xml
+.idea/other.xml
