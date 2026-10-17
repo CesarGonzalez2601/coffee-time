@@ -48,7 +48,11 @@ fun CoffeeTimeNavHost(
         }
 
         composable<Registro> {
+            val context = LocalContext.current
+            val authService = (context.applicationContext as CoffeeTimeApp).container.authenticationService
+
             RegistroScreen(
+                authService = authService,
                 onRegistered = { userId ->
                     navController.navigate(RegistroExito(userId = userId)) {
                         popUpTo(Registro) { inclusive = true }
