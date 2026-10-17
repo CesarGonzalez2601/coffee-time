@@ -1,32 +1,99 @@
 package com.coffeetime.ui.registro
 
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.coffeetime.R
-import com.coffeetime.ui.common.PlaceholderScreen
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coffeetime.domain.service.AuthenticationService
+import kotlinx.coroutines.launch
 
-/** Placeholder: #10 reemplaza esto por el registro en tres pasos. */
 @Composable
 fun RegistroScreen(
+    authService: AuthenticationService,
     onRegistered: (userId: Int) -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: RegistroViewModel = viewModel()
 ) {
-    PlaceholderScreen(
-        title = stringResource(R.string.registro_title),
+    val state by viewModel.uiState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
         modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Button(onClick = { onRegistered(DEMO_USER_ID) }) {
-            Text(text = stringResource(R.string.registro_demo_finish))
+        Text(
+            text = "Crear cuenta de Cajero",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        OutlinedTextField(
+            value = state.nombre,
+            onValueChange = viewModel::onNombreChange,
+            label = { Text("Nombre completo") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = state.pin,
+            onValueChange = viewModel::onPinChange,
+            label = { Text("Crea tu PIN (4 dígitos)") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = state.confirmarPin,
+            onValueChange = viewModel::onConfirmarPinChange,
+            label = { Text("Confirmar PIN") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        state.error?.let {
+            Text(text = it, color = MaterialTheme.colorScheme.error)
         }
-        TextButton(onClick = onBack) {
-            Text(text = stringResource(R.string.action_back))
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = {
+                if (viewModel.validarFormulario()) {
+                    coroutineScope.launch {
+                        try {
+                            val nuevoUsuario = authService.register(
+                                name = state.nombre,
+                                pin = state.pin
+                            )
+                            onRegistered(nuevoUsuario.id)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Registrar")
+        }
+
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Volver")
         }
     }
 }
-
-private const val DEMO_USER_ID = 7
