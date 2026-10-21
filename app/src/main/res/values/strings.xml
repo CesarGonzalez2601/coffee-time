@@ -31,12 +31,112 @@
     <string name="inicio_subtitulo">%1$s • %2$s</string>
     <string name="inicio_empty_metrics">Las métricas de la jornada aparecen cuando haya ventas</string>
     <string name="rbac_access_denied">Acceso denegado</string>
+    <string name="total_ventas">Ventas Totales</string>
+    <string name="ordenes_cobradas">Órdenes Cobradas</string>
+    <string name="ticket_promedio">Ticket Promedio</string>
 
     <!-- Estados vacíos por destino (#11) -->
     <string name="ordenes_empty">Aún no hay órdenes registradas en esta jornada</string>
     <string name="pagos_empty">No hay pagos pendientes ni procesados en esta jornada</string>
     <string name="inventario_empty">No hay movimientos ni alertas de inventario para mostrar</string>
     <string name="mas_empty">Las opciones de reportes, usuarios y cierre de caja aparecen cuando haya actividad</string>
+
+    <!-- Catálogo y Carrito (Órdenes - Punto 1) -->
+    <string name="buscar_producto">Buscar producto…</string>
+    <string name="catalogo_titulo">Catálogo de Productos</string>
+    <string name="carrito_titulo">Carrito de Órdenes</string>
+    <string name="carrito_vacio">El carrito está vacío. Selecciona productos para agregar.</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="iva">IVA (13%)</string>
+    <string name="total">Total</string>
+    <string name="vaciar_carrito">Vaciar</string>
+    <string name="agregar">Agregar</string>
+    <string name="confirmar_orden">Confirmar e ir a cobrar</string>
+    <string name="sin_stock">Agotado</string>
+    <string name="stock_disponible">Stock: %1$d</string>
+    <string name="orden_creada_exito">Orden #%1$d creada exitosamente</string>
+
+    <!-- Procesamiento de Pagos (Punto 2) -->
+    <string name="pagos_titulo">Procesamiento de Pagos</string>
+    <string name="tab_pendientes">Pendientes de Cobro</string>
+    <string name="tab_historial_pagos">Historial de Pagos</string>
+    <string name="historial_pagos_vacio">Aún no hay órdenes pagadas registradas en esta jornada</string>
+    <string name="total_recaudado">Total recaudado: $%1$.2f</string>
+    <string name="ver_comprobante">Ver Comprobante</string>
+    <string name="metodo_pago">Método de Pago</string>
+    <string name="monto_recibido">Monto recibido ($)</string>
+    <string name="cambio_a_entregar">Cambio a entregar</string>
+    <string name="pago_insuficiente">El monto recibido es menor al total ($%1$.2f)</string>
+    <string name="procesar_pago">Procesar Pago</string>
+    <string name="comprobante_titulo">Comprobante de Pago</string>
+    <string name="correlativo_label">Correlativo</string>
+    <string name="fecha_label">Fecha</string>
+    <string name="cajero_label">Atendido por</string>
+    <string name="gracias_compra">¡Gracias por tu compra en Coffee Time!</string>
+    <string name="nueva_orden">Aceptar</string>
+    <string name="sin_ordenes_pendientes">No hay órdenes pendientes de cobro</string>
+    <string name="tarjeta_procesando">Procesando tarjeta de crédito/débito…</string>
+    <string name="tarjeta_aprobada">Transacción aprobada con éxito</string>
+
+    <!-- Gestión de Inventario (Punto 3) -->
+    <string name="inventario_titulo">Gestión de Inventario</string>
+    <string name="alertas_stock_bajo">Stock Bajo (%1$d)</string>
+    <string name="total_productos">Total Productos (%1$d)</string>
+    <string name="filtro_stock_bajo">Solo Stock Bajo</string>
+    <string name="filtro_todos">Todos los Productos</string>
+    <string name="ajustar_stock">Ajustar Stock</string>
+    <string name="tipo_movimiento">Tipo de movimiento</string>
+    <string name="cantidad_ajuste">Cantidad</string>
+    <string name="motivo_ajuste">Motivo u observaciones</string>
+    <string name="guardar_ajuste">Guardar Ajuste</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="historial_movimientos">Historial de Movimientos</string>
+    <string name="stock_actual_label">Stock actual: %1$d (Mínimo: %2$d)</string>
+    <string name="estado_ok">OK</string>
+    <string name="estado_stock_bajo">STOCK BAJO</string>
+
+    <!-- Gestión de Productos (CRUD) -->
+    <string name="nuevo_producto">Nuevo Producto</string>
+    <string name="editar_producto">Editar Producto</string>
+    <string name="eliminar_producto">Eliminar Producto</string>
+    <string name="confirmar_eliminar_producto">¿Estás seguro de que deseas eliminar "%1$s"? Esta acción lo quitará del catálogo.</string>
+    <string name="eliminar">Eliminar</string>
+    <string name="guardar_cambios">Guardar Cambios</string>
+    <string name="agregar_producto_btn">+ Nuevo Producto</string>
+    <string name="nombre_producto">Nombre del producto</string>
+    <string name="categoria">Categoría</string>
+    <string name="precio">Precio ($)</string>
+    <string name="stock_inicial">Stock inicial</string>
+    <string name="stock_minimo">Stock mínimo (alerta)</string>
+    <string name="icono_emoji">Icono / Emoji</string>
+    <string name="guardar_producto">Guardar Producto</string>
+
+    <!-- Cierre de Caja y Reportes (Punto 4 y 5) -->
+    <string name="cierre_caja_titulo">Reportes y Cierre de Caja</string>
+    <string name="tab_cierre">Arqueo y Cierre</string>
+    <string name="tab_reportes">Reportes de Ventas</string>
+    <string name="tab_historial_cierres">Historial Cierres</string>
+    <string name="resumen_jornada">Resumen General de la Jornada</string>
+    <string name="ventas_efectivo">Ventas en Efectivo</string>
+    <string name="ventas_tarjeta">Ventas en Tarjeta</string>
+    <string name="monto_inicial_label">Monto Inicial en Caja / Fondo ($)</string>
+    <string name="efectivo_esperado_label">Efectivo Esperado en Caja ($)</string>
+    <string name="efectivo_reportado_label">Efectivo Real Contado / Reportado ($)</string>
+    <string name="diferencia_label">Diferencia / Estado del Arqueo</string>
+    <string name="cuadre_perfecto">Cuadre Perfecto ($0.00)</string>
+    <string name="sobrante_label">Sobrante: +$%1$.2f</string>
+    <string name="faltante_label">Faltante: -$%1$.2f</string>
+    <string name="observaciones_label">Observaciones del Arqueo</string>
+    <string name="realizar_cierre_btn">Realizar Cierre de Caja Diario</string>
+    <string name="cierre_realizado_exito">Cierre de caja registrado exitosamente</string>
+    <string name="reporte_periodos">Métricas por Período</string>
+    <string name="ventas_dia">Ventas de Hoy</string>
+    <string name="ventas_semana">Ventas Semanales (7 días)</string>
+    <string name="ventas_mes">Ventas Mensuales (30 días)</string>
+    <string name="top_productos_titulo">Top 5 Productos Más Vendidos</string>
+    <string name="unidades_vendidas">%1$d unid. vendidas • $%2$.2f</string>
+    <string name="sin_ventas_reporte">Aún no hay ventas registradas para generar reportes</string>
+    <string name="sin_cierres_historial">Aún no hay cierres de caja registrados</string>
 
     <!-- Comunes -->
     <string name="placeholder_en_construccion">Pantalla en construcción</string>

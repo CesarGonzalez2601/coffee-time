@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.rounded.Logout
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Payments
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -37,6 +39,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,7 +47,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -59,11 +65,19 @@ import com.coffeetime.domain.model.Cashier
 import com.coffeetime.domain.model.Permission
 import com.coffeetime.domain.model.Role
 import com.coffeetime.domain.model.User
+import com.coffeetime.ui.inventario.InventarioScreen
+import com.coffeetime.ui.inventario.InventarioViewModel
+import com.coffeetime.ui.mas.MasScreen
+import com.coffeetime.ui.mas.ReportesViewModel
 import com.coffeetime.ui.navigation.Inicio
 import com.coffeetime.ui.navigation.Inventario
 import com.coffeetime.ui.navigation.Mas
 import com.coffeetime.ui.navigation.Ordenes
 import com.coffeetime.ui.navigation.Pagos
+import com.coffeetime.ui.ordenes.OrdenesScreen
+import com.coffeetime.ui.ordenes.OrdenesViewModel
+import com.coffeetime.ui.pagos.PagosScreen
+import com.coffeetime.ui.pagos.PagosViewModel
 import com.coffeetime.ui.theme.Size
 import com.coffeetime.ui.theme.Space
 import java.time.LocalDate
@@ -125,12 +139,9 @@ fun MainScreen(
     tabsNavController: NavHostController = rememberNavController()
 ) {
     val context = LocalContext.current
+    val appContainer = (context.applicationContext as CoffeeTimeApp).container
     val activeUser = remember(user, context) {
-        user ?: (context.applicationContext as? CoffeeTimeApp)
-            ?.container
-            ?.session
-            ?.getCurrentUser()
-        ?: Cashier(id = 0, name = "Usuario")
+        user ?: appContainer.session.getCurrentUser() ?: Cashier(id = 0, name = "Usuario")
     }
 
     // Capa 1 RBAC: ocultar destinos según user.hasPermission(...)
@@ -185,6 +196,7 @@ fun MainScreen(
             composable<Inicio> {
                 InicioDestination(
                     user = activeUser,
+                    appContainer = appContainer,
                     onLogout = onLogout
                 )
             }
@@ -196,10 +208,24 @@ fun MainScreen(
                     snackbarHostState = snackbarHostState,
                     deniedMessage = accessDeniedMessage
                 ) {
-                    EmptyDestinationScreen(
-                        title = stringResource(R.string.nav_ordenes),
-                        emptyMessage = stringResource(R.string.ordenes_empty),
-                        icon = Icons.AutoMirrored.Rounded.ReceiptLong
+                    val ordenesViewModel: OrdenesViewModel = viewModel(
+                        factory = OrdenesViewModel.provideFactory(
+                            appContainer.productRepository,
+                            appContainer.orderRepository
+                        )
+                    )
+                    OrdenesScreen(
+                        viewModel = ordenesViewModel,
+                        user = activeUser,
+                        onNavigateToPagos = {
+                            tabsNavController.navigate(Pagos) {
+                                popUpTo(tabsNavController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     )
                 }
             }
@@ -211,10 +237,17 @@ fun MainScreen(
                     snackbarHostState = snackbarHostState,
                     deniedMessage = accessDeniedMessage
                 ) {
-                    EmptyDestinationScreen(
-                        title = stringResource(R.string.nav_pagos),
-                        emptyMessage = stringResource(R.string.pagos_empty),
-                        icon = Icons.Rounded.Payments
+                    val pagosViewModel: PagosViewModel = viewModel(
+                        factory = PagosViewModel.provideFactory(
+                            appContainer.orderRepository,
+                            appContainer.paymentRepository,
+                            appContainer.productRepository,
+                            appContainer.inventoryRepository
+                        )
+                    )
+                    PagosScreen(
+                        viewModel = pagosViewModel,
+                        user = activeUser
                     )
                 }
             }
@@ -226,10 +259,14 @@ fun MainScreen(
                     snackbarHostState = snackbarHostState,
                     deniedMessage = accessDeniedMessage
                 ) {
-                    EmptyDestinationScreen(
-                        title = stringResource(R.string.nav_inventario),
-                        emptyMessage = stringResource(R.string.inventario_empty),
-                        icon = Icons.Rounded.Inventory2
+                    val inventarioViewModel: InventarioViewModel = viewModel(
+                        factory = InventarioViewModel.provideFactory(
+                            appContainer.productRepository,
+                            appContainer.inventoryRepository
+                        )
+                    )
+                    InventarioScreen(
+                        viewModel = inventarioViewModel
                     )
                 }
             }
@@ -241,13 +278,18 @@ fun MainScreen(
                     snackbarHostState = snackbarHostState,
                     deniedMessage = accessDeniedMessage
                 ) {
-                    EmptyDestinationScreen(
-                        title = stringResource(R.string.nav_mas),
-                        emptyMessage = stringResource(R.string.mas_empty),
-                        icon = Icons.Rounded.MoreHoriz,
-                        bottomAction = {
-                            LogoutButton(onLogout = onLogout)
-                        }
+                    val reportesViewModel: ReportesViewModel = viewModel(
+                        factory = ReportesViewModel.provideFactory(
+                            appContainer.paymentRepository,
+                            appContainer.orderRepository,
+                            appContainer.productRepository,
+                            appContainer.cierreCajaRepository
+                        )
+                    )
+                    MasScreen(
+                        viewModel = reportesViewModel,
+                        user = activeUser,
+                        onLogout = onLogout
                     )
                 }
             }
@@ -288,6 +330,7 @@ private fun PermissionGuard(
 @Composable
 private fun InicioDestination(
     user: User,
+    appContainer: com.coffeetime.di.AppContainer,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -300,6 +343,11 @@ private fun InicioDestination(
         val formatter = DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-SV"))
         LocalDate.now().format(formatter).replaceFirstChar { it.uppercase() }
     }
+
+    val payments by appContainer.paymentRepository.getAllPaymentsFlow().collectAsState(initial = emptyList())
+    val totalVentas = remember(payments) { payments.sumOf { it.montoRecibido - it.cambio } }
+    val orderCount = payments.size
+    val ticketPromedio = if (orderCount > 0) totalVentas / orderCount else 0.0
 
     Column(
         modifier = modifier
@@ -330,38 +378,107 @@ private fun InicioDestination(
             }
         }
 
-        // Estado vacío de métricas de la jornada
+        // Métricas de la jornada o estado vacío
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.outlinedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
+            if (payments.isEmpty()) {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Space.s6),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Space.s3)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.BarChart,
+                            contentDescription = null,
+                            modifier = Modifier.size(Size.touch),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stringResource(R.string.inicio_empty_metrics),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Space.s6),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(Space.s3)
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.BarChart,
-                        contentDescription = null,
-                        modifier = Modifier.size(Size.touch),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = stringResource(R.string.inicio_empty_metrics),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Column(modifier = Modifier.padding(Space.s4)) {
+                            Text(
+                                text = stringResource(R.string.total_ventas),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = String.format(Locale.US, "$%.2f", totalVentas),
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Space.s3)
+                    ) {
+                        ElevatedCard(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(Space.s4)) {
+                                Text(
+                                    text = stringResource(R.string.ordenes_cobradas),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "$orderCount",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        ElevatedCard(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(Space.s4)) {
+                                Text(
+                                    text = stringResource(R.string.ticket_promedio),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = String.format(Locale.US, "$%.2f", ticketPromedio),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -371,69 +488,6 @@ private fun InicioDestination(
             onLogout = onLogout,
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-@Composable
-private fun EmptyDestinationScreen(
-    title: String,
-    emptyMessage: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    bottomAction: (@Composable () -> Unit)? = null
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(Space.s4),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium, // Fraunces
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.outlinedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Space.s6),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Space.s3)
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(Size.touch),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = emptyMessage,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-
-        if (bottomAction != null) {
-            bottomAction()
-        } else {
-            Spacer(modifier = Modifier.height(Space.s1))
-        }
     }
 }
 
