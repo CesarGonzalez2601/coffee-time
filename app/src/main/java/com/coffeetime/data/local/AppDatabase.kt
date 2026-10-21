@@ -10,13 +10,26 @@ import androidx.room.RoomDatabase
  * vuelve a crear (no hay datos reales que preservar). El seed corre en [UserSeedCallback].
  */
 @Database(
-    entities = [UserEntity::class],
-    version = 1,
+    entities = [
+        UserEntity::class,
+        ProductEntity::class,
+        OrderEntity::class,
+        OrderItemEntity::class,
+        PaymentEntity::class,
+        InventoryMovementEntity::class,
+        CierreCajaEntity::class
+    ],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
+    abstract fun productDao(): ProductDao
+    abstract fun orderDao(): OrderDao
+    abstract fun paymentDao(): PaymentDao
+    abstract fun inventoryMovementDao(): InventoryMovementDao
+    abstract fun cierreCajaDao(): CierreCajaDao
 
     companion object {
 
