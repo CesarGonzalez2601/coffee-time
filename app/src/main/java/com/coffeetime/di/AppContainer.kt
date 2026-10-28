@@ -1,8 +1,8 @@
 package com.coffeetime.di
 
 import android.content.Context
-import com.coffeetime.data.fake.FakeAuthGateway
-import com.coffeetime.data.fake.FakeUserRepository
+import com.coffeetime.data.firebase.FirebaseAuthGateway
+import com.coffeetime.data.firebase.UserRepositoryFirestore
 import com.coffeetime.data.local.AppDatabase
 import com.coffeetime.data.local.CierreCajaRepositoryRoom
 import com.coffeetime.data.local.InventoryRepositoryRoom
@@ -39,13 +39,12 @@ class DefaultAppContainer(
         AppDatabase.build(context)
     }
 
-    // Temporal: se cambian por FirebaseAuthGateway y UserRepositoryFirestore (#23).
     private val authGateway: AuthGateway by lazy {
-        FakeAuthGateway()
+        FirebaseAuthGateway()
     }
 
     override val userRepository: UserRepository by lazy {
-        FakeUserRepository()
+        UserRepositoryFirestore()
     }
 
     override val productRepository: ProductRepository by lazy {
