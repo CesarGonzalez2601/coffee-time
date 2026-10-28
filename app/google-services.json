@@ -12,7 +12,12 @@
           "package_name": "com.coffeetime"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "303089730950-7qr98ictsn32ri3glh3v3quvauncg65f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCeUAcqcoS2rApdurUtLm6Knny2nUvtDZE"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "303089730950-7qr98ictsn32ri3glh3v3quvauncg65f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
