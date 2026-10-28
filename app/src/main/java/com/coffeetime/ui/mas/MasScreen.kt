@@ -165,7 +165,7 @@ fun MasScreen(
                     onEfectivoReportadoChanged = viewModel::onEfectivoReportadoChange,
                     onObservacionesChanged = viewModel::onObservacionesChange,
                     onRealizarCierre = {
-                        viewModel.realizarCierreCaja(cajeroId = user.id, cashierName = user.name)
+                        viewModel.realizarCierreCaja(cajeroUid = user.uid, cashierName = user.name)
                     }
                 )
                 1 -> ReportesVentasView(uiState = uiState)

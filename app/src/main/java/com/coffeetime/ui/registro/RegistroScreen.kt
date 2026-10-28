@@ -77,7 +77,7 @@ fun RegistroScreen(
                                 name = state.nombre,
                                 pin = state.pin
                             )
-                            onRegistered(nuevoUsuario.id)
+                            onRegistered(nuevoUsuario.uid.toInt())
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }

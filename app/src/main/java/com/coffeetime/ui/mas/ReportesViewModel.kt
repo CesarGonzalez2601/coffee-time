@@ -206,7 +206,7 @@ class ReportesViewModel(
         _observacionesText.value = text
     }
 
-    fun realizarCierreCaja(cajeroId: Int, cashierName: String) {
+    fun realizarCierreCaja(cajeroUid: String, cashierName: String) {
         val state = uiState.value
         if (!state.canRealizarCierre || state.isSubmitting) return
 
@@ -223,7 +223,7 @@ class ReportesViewModel(
                     efectivoReportado = state.efectivoReportado,
                     diferencia = state.diferencia,
                     observaciones = state.observacionesText,
-                    cajeroId = cajeroId,
+                    cajeroUid = cajeroUid,
                     cashierName = cashierName
                 )
 

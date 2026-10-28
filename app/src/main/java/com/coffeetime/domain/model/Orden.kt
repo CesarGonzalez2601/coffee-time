@@ -20,5 +20,5 @@ data class Orden(
     val iva: Double = 0.0,
     val total: Double = 0.0,
     val estado: EstadoOrden = EstadoOrden.PENDIENTE,
-    val cajeroId: Int
+    val cajeroUid: String
 )

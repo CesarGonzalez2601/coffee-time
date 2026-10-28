@@ -24,7 +24,7 @@ class PaymentRepositoryRoom(
             change = pago.cambio,
             correlative = correlative,
             timestamp = pago.fechaTimestamp,
-            cashierId = pago.cajeroId
+            cashierUid = pago.cajeroUid
         )
 
         paymentDao.insertPayment(entity)

@@ -16,8 +16,8 @@ data class OrderEntity(
     val iva: Double,
     val total: Double,
     val status: String,
-    @ColumnInfo(name = "cashier_id")
-    val cashierId: Int
+    @ColumnInfo(name = "cashier_uid")
+    val cashierUid: String
 ) {
     companion object {
         const val TABLE = "orders"

@@ -21,7 +21,9 @@ data class InventoryMovementEntity(
     @ColumnInfo(name = "new_stock")
     val newStock: Int,
     val reason: String,
-    val timestamp: Long
+    val timestamp: Long,
+    @ColumnInfo(name = "user_uid")
+    val userUid: String
 ) {
     fun toDomain(): MovimientoInventario = MovimientoInventario(
         id = id,
@@ -32,7 +34,8 @@ data class InventoryMovementEntity(
         stockAnterior = previousStock,
         stockNuevo = newStock,
         motivo = reason,
-        fechaTimestamp = timestamp
+        fechaTimestamp = timestamp,
+        usuarioUid = userUid
     )
 
     companion object {

@@ -23,7 +23,7 @@ class AuthenticationService(
         pin: String
     ): User {
 
-        val user = userRepository.findById(userId)
+        val user = userRepository.findByUid(userId.toString())
             ?: throw UserNotFoundException(
                 "User with ID $userId was not found."
             )
@@ -35,7 +35,7 @@ class AuthenticationService(
         }
 
         val credentials =
-            userRepository.getCredentials(userId)
+            userRepository.getCredentials(userId.toString())
                 ?: throw UserNotFoundException(
                     "Credentials were not found."
                 )
@@ -115,7 +115,7 @@ class AuthenticationService(
 
         Log.i(
             TAG,
-            "Registered cashier with ID ${user.id}"
+            "Registered cashier with ID ${user.uid}"
         )
 
         return user

@@ -141,7 +141,11 @@ fun MainScreen(
     val context = LocalContext.current
     val appContainer = (context.applicationContext as CoffeeTimeApp).container
     val activeUser = remember(user, context) {
-        user ?: appContainer.session.getCurrentUser() ?: Cashier(id = 0, name = "Usuario")
+        user ?: appContainer.session.getCurrentUser() ?: Cashier(
+            uid = "",
+            name = "Usuario",
+            email = ""
+        )
     }
 
     // Capa 1 RBAC: ocultar destinos según user.hasPermission(...)
@@ -262,7 +266,8 @@ fun MainScreen(
                     val inventarioViewModel: InventarioViewModel = viewModel(
                         factory = InventarioViewModel.provideFactory(
                             appContainer.productRepository,
-                            appContainer.inventoryRepository
+                            appContainer.inventoryRepository,
+                            activeUser.uid
                         )
                     )
                     InventarioScreen(

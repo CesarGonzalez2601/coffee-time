@@ -25,11 +25,11 @@ class UserRepositoryRoom(
         return entity.copy(id = id).toDomain()
     }
 
-    override suspend fun findById(id: Int): User? =
-        userDao.findById(id)?.toDomain()
+    override suspend fun findByUid(uid: String): User? =
+        uid.toIntOrNull()?.let { userDao.findById(it) }?.toDomain()
 
-    override suspend fun getCredentials(id: Int): Credentials? =
-        userDao.findById(id)?.toCredentials()
+    override suspend fun getCredentials(uid: String): Credentials? =
+        uid.toIntOrNull()?.let { userDao.findById(it) }?.toCredentials()
 
     override suspend fun findAll(): List<User> =
         userDao.findAll().map { it.toDomain() }
@@ -38,11 +38,13 @@ class UserRepositoryRoom(
         userDao.count()
 
     override suspend fun updateStatus(
-        id: Int,
+        uid: String,
         active: Boolean
-    ): Boolean =
-        userDao.updateActive(
+    ): Boolean {
+        val id = uid.toIntOrNull() ?: return false
+        return userDao.updateActive(
             id = id,
             active = active
         ) > 0
+    }
 }

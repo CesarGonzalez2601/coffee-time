@@ -106,15 +106,15 @@ class AuthenticationServiceTest {
 
         assertIs<Cashier>(registered)
         assertEquals(Role.CASHIER, registered.role)
-        assertEquals(3, registered.id)
+        assertEquals("3", registered.uid)
         assertEquals("Ana María", registered.name)
 
         val loggedIn = service.login(
-            userId = registered.id,
+            userId = registered.uid.toInt(),
             pin = "4826"
         )
 
-        assertEquals(registered.id, loggedIn.id)
+        assertEquals(registered.uid, loggedIn.uid)
     }
 
     @Test

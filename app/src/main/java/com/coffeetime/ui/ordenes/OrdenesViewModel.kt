@@ -130,7 +130,7 @@ class OrdenesViewModel(
         _cartItems.value = emptyList()
     }
 
-    fun confirmOrder(cajeroId: Int, onSuccess: (Int) -> Unit) {
+    fun confirmOrder(cajeroUid: String, onSuccess: (Int) -> Unit) {
         val cart = _cartItems.value
         if (cart.isEmpty() || _isSubmitting.value) return
 
@@ -156,7 +156,7 @@ class OrdenesViewModel(
                     iva = iva,
                     total = total,
                     estado = EstadoOrden.PENDIENTE,
-                    cajeroId = cajeroId
+                    cajeroUid = cajeroUid
                 )
 
                 val createdId = orderRepository.createOrder(orden)

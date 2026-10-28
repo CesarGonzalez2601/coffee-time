@@ -13,16 +13,16 @@ interface UserRepository {
         role: Role
     ): User
 
-    suspend fun findById(id: Int): User?
+    suspend fun findByUid(uid: String): User?
 
-    suspend fun getCredentials(id: Int): Credentials?
+    suspend fun getCredentials(uid: String): Credentials?
 
     suspend fun findAll(): List<User>
 
     suspend fun count(): Int
 
     suspend fun updateStatus(
-        id: Int,
+        uid: String,
         active: Boolean
     ): Boolean
 }

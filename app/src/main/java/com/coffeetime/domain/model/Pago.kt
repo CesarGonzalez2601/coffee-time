@@ -8,5 +8,5 @@ data class Pago(
     val cambio: Double,
     val comprobanteCorrelativo: String,
     val fechaTimestamp: Long = System.currentTimeMillis(),
-    val cajeroId: Int
+    val cajeroUid: String
 )

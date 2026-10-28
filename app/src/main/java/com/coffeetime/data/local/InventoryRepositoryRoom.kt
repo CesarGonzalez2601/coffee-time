@@ -19,7 +19,8 @@ class InventoryRepositoryRoom(
             previousStock = movimiento.stockAnterior,
             newStock = movimiento.stockNuevo,
             reason = movimiento.motivo,
-            timestamp = movimiento.fechaTimestamp
+            timestamp = movimiento.fechaTimestamp,
+            userUid = movimiento.usuarioUid
         )
         inventoryMovementDao.insertMovement(entity)
     }

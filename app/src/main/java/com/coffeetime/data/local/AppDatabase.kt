@@ -19,7 +19,7 @@ import androidx.room.RoomDatabase
         InventoryMovementEntity::class,
         CierreCajaEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

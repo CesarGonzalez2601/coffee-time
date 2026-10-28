@@ -54,12 +54,12 @@ class FakeUserRepository : UserRepository {
         )
     }
 
-    override suspend fun findById(id: Int): User? = mutex.withLock {
-        users.firstOrNull { it.user.id == id }?.user
+    override suspend fun findByUid(uid: String): User? = mutex.withLock {
+        users.firstOrNull { it.user.uid == uid }?.user
     }
 
-    override suspend fun getCredentials(id: Int): Credentials? = mutex.withLock {
-        users.firstOrNull { it.user.id == id }?.credentials
+    override suspend fun getCredentials(uid: String): Credentials? = mutex.withLock {
+        users.firstOrNull { it.user.uid == uid }?.credentials
     }
 
     override suspend fun findAll(): List<User> = mutex.withLock {
@@ -71,16 +71,16 @@ class FakeUserRepository : UserRepository {
     }
 
     override suspend fun updateStatus(
-        id: Int,
+        uid: String,
         active: Boolean
     ): Boolean = mutex.withLock {
-        val index = users.indexOfFirst { it.user.id == id }
+        val index = users.indexOfFirst { it.user.uid == uid }
         if (index == -1) return@withLock false
 
         val current = users[index]
         users[index] = current.copy(
             user = buildUser(
-                id = current.user.id,
+                uid = current.user.uid,
                 name = current.user.name,
                 role = current.user.role,
                 active = active
@@ -114,7 +114,7 @@ class FakeUserRepository : UserRepository {
         role: Role
     ): User {
         val user = buildUser(
-            id = nextId++,
+            uid = (nextId++).toString(),
             name = name,
             role = role,
             active = true
@@ -127,19 +127,21 @@ class FakeUserRepository : UserRepository {
     }
 
     private fun buildUser(
-        id: Int,
+        uid: String,
         name: String,
         role: Role,
         active: Boolean
     ): User = when (role) {
         Role.ADMINISTRATOR -> Administrator(
-            id = id,
+            uid = uid,
             name = name,
+            email = "",
             active = active
         )
         Role.CASHIER -> Cashier(
-            id = id,
+            uid = uid,
             name = name,
+            email = "",
             active = active
         )
     }

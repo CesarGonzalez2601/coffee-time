@@ -56,14 +56,14 @@ class UserRepositoryRoomTest {
 
         assertEquals(2, users.size)
         assertIs<Administrator>(users[0])
-        assertEquals(UserSeedCallback.ADMIN_ID, users[0].id)
+        assertEquals(UserSeedCallback.ADMIN_ID.toString(), users[0].uid)
         assertIs<Cashier>(users[1])
-        assertEquals(UserSeedCallback.CASHIER_ID, users[1].id)
+        assertEquals(UserSeedCallback.CASHIER_ID.toString(), users[1].uid)
     }
 
     @Test
     fun seedGuardaHashYSaltNoElPin() = runTest {
-        val credentials = repository.getCredentials(UserSeedCallback.ADMIN_ID)!!
+        val credentials = repository.getCredentials(UserSeedCallback.ADMIN_ID.toString())!!
 
         assertTrue(credentials.pinHash != "2580")
         assertTrue(credentials.pinSalt.isNotBlank())
@@ -92,15 +92,15 @@ class UserRepositoryRoomTest {
             pin = "4826"
         )
 
-        assertEquals(3, user.id)
+        assertEquals("3", user.uid)
         assertEquals(Role.CASHIER, user.role)
         assertEquals(3, repository.count())
         assertEquals(
-            3,
+            "3",
             service.login(
                 userId = 3,
                 pin = "4826"
-            ).id
+            ).uid
         )
     }
 
@@ -108,7 +108,7 @@ class UserRepositoryRoomTest {
     fun usuarioDesactivadoNoPuedeEntrar() = runTest {
         assertTrue(
             repository.updateStatus(
-                id = 2,
+                uid = "2",
                 active = false
             )
         )
