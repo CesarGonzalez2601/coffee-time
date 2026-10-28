@@ -142,7 +142,7 @@ fun OrdenesScreen(
                 onRemoveItem = viewModel::removeFromCart,
                 onClearCart = viewModel::clearCart,
                 onConfirmOrder = {
-                    viewModel.confirmOrder(cajeroId = user.id) {
+                    viewModel.confirmOrder(cajeroUid = user.uid) {
                         onNavigateToPagos()
                     }
                 }

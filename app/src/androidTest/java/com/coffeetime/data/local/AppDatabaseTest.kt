@@ -29,15 +29,24 @@ class AppDatabaseTest {
     @Test
     fun seedNoSeRepiteAlReabrirLaBase() = runTest {
         val first = AppDatabase.build(context)
-        assertEquals(2, first.userDao().count())
+        assertEquals(SEEDED_PRODUCTS, first.productCount())
         first.close()
 
         val reopened = AppDatabase.build(context)
-        assertEquals(2, reopened.userDao().count())
+        assertEquals(SEEDED_PRODUCTS, reopened.productCount())
         reopened.close()
     }
 
+    private fun AppDatabase.productCount(): Int =
+        openHelper.readableDatabase
+            .query("SELECT COUNT(*) FROM ${ProductEntity.TABLE}")
+            .use { cursor ->
+                cursor.moveToFirst()
+                cursor.getInt(0)
+            }
+
     private companion object {
         const val DB_NAME = "coffeetime.db"
+        const val SEEDED_PRODUCTS = 12
     }
 }

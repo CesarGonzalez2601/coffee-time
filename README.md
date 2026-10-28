@@ -12,12 +12,12 @@ App Android de caja para una cafetería (proyecto universitario). La usan el **c
 
 | Módulo / Funcionalidad | Descripción | Estado |
 | --- | --- | --- |
-| **Usuarios y Auth** | Login con PinPad, registro de cajeros y RBAC por rol en Room | Listo |
+| **Usuarios y Auth** | Firebase Auth (correo y contraseña; Google en #24), perfiles y roles en Firestore `users/{uid}`, sesión persistente y RBAC por rol | Listo (Google en curso) |
 | **Catálogo y Carrito (Órdenes)** | Vista visual por categorías, buscador, carrito con subtotal, IVA (13%) y total | Listo |
 | **Procesamiento de Pagos** | Pago efectivo/tarjeta, calculadora de cambio, comprobante con correlativo y ticket | Listo |
 | **Gestión de Inventario** | Alertas de stock bajo, ajuste manual, trazabilidad de movimientos y CRUD completo de productos (crear, editar, eliminar) | Listo |
 | **Reportes y Cierre de Caja** | Métricas en Inicio, ventas por período (hoy, semana, mes), Top 5 productos más vendidos, arqueo y cierre diario aislado por jornada | Listo |
-| **Persistencia Room** | Entidades y DAOs para `User`, `Product`, `Order`, `OrderItem`, `Payment`, `InventoryMovement` y `CierreCaja` | Listo |
+| **Persistencia Room** | Entidades y DAOs para `Product`, `Order`, `OrderItem`, `Payment`, `InventoryMovement` y `CierreCaja` (pasan a Firestore en #25) | Listo |
 
 ## Tech stack
 
@@ -29,7 +29,8 @@ Todas las versiones están fijas en [`gradle/libs.versions.toml`](gradle/libs.ve
 | UI | Jetpack Compose + Material 3 |
 | Navegación | Navigation Compose type-safe (`@Serializable`) |
 | Estado | ViewModel (MVVM) con StateFlow y Flow reactive streams |
-| Base de datos | Room (SQLite local) v3 con fallback a reconstrucción |
+| Autenticación | Firebase Auth (correo/contraseña y Google con Credential Manager) |
+| Base de datos | Cloud Firestore para usuarios; Room (SQLite local) v5 para los datos del café hasta #25 |
 | DI | Manual, en `AppContainer` |
 | Logs | `android.util.Log` (Logcat) |
 | Android | minSdk 26 (Android 8.0), compile/targetSdk 37 |
@@ -63,14 +64,23 @@ sdk.dir=C\:\\Users\\<tu-usuario>\\AppData\\Local\\Android\\Sdk
 ./gradlew lint
 ```
 
-### Usuarios de prueba
+### Firebase
 
-| ID | PIN | Rol | Permisos |
+El proyecto de Firebase es `coffee-time-966f2` y su `app/google-services.json` está en el repo. Para que **Continuar con Google** funcione en tu compu, la SHA-1 de tu llave de depuración tiene que estar registrada:
+
+1. Corre `./gradlew signingReport` y copia la línea `SHA1:` de `Variant: debug`.
+2. Mándala a Erick para que la agregue en *Configuración del proyecto → app Android → Huellas digitales del certificado SHA* y suba el `google-services.json` actualizado.
+
+Correo y contraseña funcionan sin este paso. Las reglas de seguridad están en [`firestore.rules`](firestore.rules); se publican desde la consola (*Firestore Database → Reglas*) o con `firebase deploy --only firestore:rules`.
+
+### Cuentas de prueba
+
+| Correo | Contraseña | Rol | Permisos |
 | --- | --- | --- | --- |
-| 1 | `2580` | Administrador | Todos (*Crear órdenes, Cobrar, Inventario/CRUD, Reportes/Cierre*) |
-| 2 | `1397` | Cajero | *Crear órdenes* y *Cobrar* |
+| `admin@coffeetime.test` | `admin123` | Administrador | Todos (*Crear órdenes, Cobrar, Inventario/CRUD, Reportes/Cierre*) |
+| `cajero@coffeetime.test` | `cajero123` | Cajero | *Crear órdenes* y *Cobrar* |
 
-Se crean la primera vez que la app abre la base (`UserSeedCallback`), junto con **12 productos iniciales** sembrados para pruebas.
+Son cuentas solo para pruebas. Toda cuenta nueva se registra como **cajero**; el rol de administrador se marca a mano en Firestore (`users/{uid}` → `role: "ADMINISTRATOR"`). Al abrir la base por primera vez se siembran **12 productos iniciales** (`SeedCallback`).
 
 ## Arquitectura
 
@@ -79,7 +89,7 @@ Tres capas. La UI nunca toca la base de datos: siempre le pide al dominio a trav
 ```mermaid
 flowchart TD
     UI["ui/<br/>Composables + ViewModels"] --> Domain["domain/<br/>modelos, servicios, interfaces de repositorio"]
-    Data["data/<br/>Room Database"] -. implementa .-> Domain
+    Data["data/<br/>Firebase + Room"] -. implementa .-> Domain
     App["CoffeeTimeApp<br/>AppContainer"] --> UI
     App --> Data
 ```
@@ -90,13 +100,14 @@ app/src/main/java/com/coffeetime/
 ├── MainActivity.kt         setContent { CoffeeTimeTheme { CoffeeTimeNavHost() } }
 ├── di/AppContainer.kt      Inyección manual de dependencias y repositorios
 ├── domain/
-│   ├── model/              User, Producto, CategoriaProducto, CartItem, Orden, Pago, MovimientoInventario, CierreCaja
-│   ├── exception/          IncorrectPin, InvalidInput, PermissionDenied, UserNotFound
+│   ├── model/              User, AuthAccount, Producto, CategoriaProducto, CartItem, Orden, Pago, MovimientoInventario, CierreCaja
+│   ├── exception/          AuthenticationException, InvalidInput, PermissionDenied
 │   ├── repository/         UserRepository, ProductRepository, OrderRepository, PaymentRepository, InventoryRepository, CierreCajaRepository
-│   ├── security/           PinSecurity (PBKDF2WithHmacSHA256, 120k iteraciones)
-│   └── service/            AuthenticationService, Session
+│   └── service/            AuthenticationService, AuthGateway, Session
 ├── data/
-│   └── local/              Room: UserEntity, ProductEntity, OrderEntity, OrderItemEntity, PaymentEntity, InventoryMovementEntity, CierreCajaEntity, DAOs, AppDatabase, seed
+│   ├── firebase/           FirebaseAuthGateway, UserRepositoryFirestore
+│   ├── fake/               FakeAuthGateway, FakeUserRepository (pruebas JVM)
+│   └── local/              Room: ProductEntity, OrderEntity, OrderItemEntity, PaymentEntity, InventoryMovementEntity, CierreCajaEntity, DAOs, AppDatabase, seed
 └── ui/
     ├── theme/              Color, Theme, Type, Shape, Dimens (design system)
     ├── navigation/         Routes.kt + CoffeeTimeNavHost.kt
@@ -113,6 +124,6 @@ La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títu
 
 ## Reglas del equipo
 
-- Textos en `res/values/strings.xml`, en español con **tuteo** ("Ingresa tu PIN"). Nunca escritos directo en un Composable.
+- Textos en `res/values/strings.xml`, en español con **tuteo** ("Ingresa tu correo"). Nunca escritos directo en un Composable.
 - Colores, fuentes y tamaños salen de `MaterialTheme` y de `Space` / `Size`.
 - Versiones de librerías solo en `libs.versions.toml`.

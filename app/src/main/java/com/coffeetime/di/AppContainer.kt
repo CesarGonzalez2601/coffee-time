@@ -1,19 +1,21 @@
 package com.coffeetime.di
 
 import android.content.Context
+import com.coffeetime.data.firebase.FirebaseAuthGateway
+import com.coffeetime.data.firebase.UserRepositoryFirestore
 import com.coffeetime.data.local.AppDatabase
 import com.coffeetime.data.local.CierreCajaRepositoryRoom
 import com.coffeetime.data.local.InventoryRepositoryRoom
 import com.coffeetime.data.local.OrderRepositoryRoom
 import com.coffeetime.data.local.PaymentRepositoryRoom
 import com.coffeetime.data.local.ProductRepositoryRoom
-import com.coffeetime.data.local.UserRepositoryRoom
 import com.coffeetime.domain.repository.CierreCajaRepository
 import com.coffeetime.domain.repository.InventoryRepository
 import com.coffeetime.domain.repository.OrderRepository
 import com.coffeetime.domain.repository.PaymentRepository
 import com.coffeetime.domain.repository.ProductRepository
 import com.coffeetime.domain.repository.UserRepository
+import com.coffeetime.domain.service.AuthGateway
 import com.coffeetime.domain.service.AuthenticationService
 import com.coffeetime.domain.service.Session
 
@@ -37,10 +39,12 @@ class DefaultAppContainer(
         AppDatabase.build(context)
     }
 
+    private val authGateway: AuthGateway by lazy {
+        FirebaseAuthGateway()
+    }
+
     override val userRepository: UserRepository by lazy {
-        UserRepositoryRoom(
-            userDao = database.userDao()
-        )
+        UserRepositoryFirestore()
     }
 
     override val productRepository: ProductRepository by lazy {
@@ -77,6 +81,7 @@ class DefaultAppContainer(
 
     override val authenticationService: AuthenticationService by lazy {
         AuthenticationService(
+            authGateway = authGateway,
             userRepository = userRepository,
             session = session
         )

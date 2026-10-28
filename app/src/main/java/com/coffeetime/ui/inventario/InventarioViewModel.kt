@@ -96,7 +96,8 @@ data class InventarioUiState(
 
 class InventarioViewModel(
     private val productRepository: ProductRepository,
-    private val inventoryRepository: InventoryRepository
+    private val inventoryRepository: InventoryRepository,
+    private val usuarioUid: String
 ) : ViewModel() {
 
     private val _onlyLowStockFilter = MutableStateFlow(false)
@@ -214,7 +215,8 @@ class InventarioViewModel(
                         cantidad = delta,
                         stockAnterior = previousStock,
                         stockNuevo = newStock,
-                        motivo = form.reasonText.ifBlank { form.type.displayName }
+                        motivo = form.reasonText.ifBlank { form.type.displayName },
+                        usuarioUid = usuarioUid
                     )
                 )
 
@@ -279,7 +281,8 @@ class InventarioViewModel(
                             cantidad = form.initialStock,
                             stockAnterior = 0,
                             stockNuevo = form.initialStock,
-                            motivo = "Creación de nuevo producto"
+                            motivo = "Creación de nuevo producto",
+                            usuarioUid = usuarioUid
                         )
                     )
                 }
@@ -370,11 +373,12 @@ class InventarioViewModel(
     companion object {
         fun provideFactory(
             productRepository: ProductRepository,
-            inventoryRepository: InventoryRepository
+            inventoryRepository: InventoryRepository,
+            usuarioUid: String
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return InventarioViewModel(productRepository, inventoryRepository) as T
+                return InventarioViewModel(productRepository, inventoryRepository, usuarioUid) as T
             }
         }
     }

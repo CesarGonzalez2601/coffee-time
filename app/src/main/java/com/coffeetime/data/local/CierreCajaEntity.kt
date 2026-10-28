@@ -19,7 +19,7 @@ data class CierreCajaEntity(
     @ColumnInfo(name = "efectivo_reportado") val efectivoReportado: Double,
     val diferencia: Double,
     val observaciones: String,
-    @ColumnInfo(name = "cashier_id") val cashierId: Int,
+    @ColumnInfo(name = "cashier_uid") val cashierUid: String,
     @ColumnInfo(name = "cashier_name") val cashierName: String
 ) {
     fun toDomain(): CierreCaja = CierreCaja(
@@ -34,7 +34,7 @@ data class CierreCajaEntity(
         efectivoReportado = efectivoReportado,
         diferencia = diferencia,
         observaciones = observaciones,
-        cajeroId = cashierId,
+        cajeroUid = cashierUid,
         cashierName = cashierName
     )
 
@@ -53,7 +53,7 @@ data class CierreCajaEntity(
             efectivoReportado = cierre.efectivoReportado,
             diferencia = cierre.diferencia,
             observaciones = cierre.observaciones,
-            cashierId = cierre.cajeroId,
+            cashierUid = cierre.cajeroUid,
             cashierName = cierre.cashierName
         )
     }

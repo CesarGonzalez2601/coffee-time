@@ -21,7 +21,7 @@ class Session {
 
         Log.i(
             TAG,
-            "Session started for user ${user.id}"
+            "Session started for user ${user.uid}"
         )
     }
 
@@ -30,7 +30,7 @@ class Session {
         _currentUser.value?.let { user ->
             Log.i(
                 TAG,
-                "Session closed for user ${user.id}"
+                "Session closed for user ${user.uid}"
             )
         }
 
@@ -54,7 +54,7 @@ class Session {
 
             Log.w(
                 TAG,
-                "Permission denied for user ${user.id}: $permission"
+                "Permission denied for user ${user.uid}: $permission"
             )
 
             throw PermissionDeniedException(

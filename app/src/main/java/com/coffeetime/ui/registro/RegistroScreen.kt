@@ -5,17 +5,21 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coffeetime.R
 import com.coffeetime.domain.service.AuthenticationService
+import com.coffeetime.ui.login.authErrorMessage
+import com.coffeetime.ui.theme.Space
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 @Composable
 fun RegistroScreen(
     authService: AuthenticationService,
-    onRegistered: (userId: Int) -> Unit,
+    onRegistered: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RegistroViewModel = viewModel()
@@ -26,44 +30,53 @@ fun RegistroScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(Space.s6),
+        verticalArrangement = Arrangement.spacedBy(Space.s4)
     ) {
         Text(
-            text = "Crear cuenta de Cajero",
+            text = stringResource(R.string.registro_title),
             style = MaterialTheme.typography.headlineMedium
         )
 
         OutlinedTextField(
             value = state.nombre,
             onValueChange = viewModel::onNombreChange,
-            label = { Text("Nombre completo") },
+            label = { Text(stringResource(R.string.registro_name_label)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
 
         OutlinedTextField(
-            value = state.pin,
-            onValueChange = viewModel::onPinChange,
-            label = { Text("Crea tu PIN (4 dígitos)") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            value = state.email,
+            onValueChange = viewModel::onEmailChange,
+            label = { Text(stringResource(R.string.auth_email_label)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
 
         OutlinedTextField(
-            value = state.confirmarPin,
-            onValueChange = viewModel::onConfirmarPinChange,
-            label = { Text("Confirmar PIN") },
+            value = state.password,
+            onValueChange = viewModel::onPasswordChange,
+            label = { Text(stringResource(R.string.registro_password_label)) },
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = state.confirmarPassword,
+            onValueChange = viewModel::onConfirmarPasswordChange,
+            label = { Text(stringResource(R.string.registro_confirm_label)) },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
 
         state.error?.let {
-            Text(text = it, color = MaterialTheme.colorScheme.error)
+            Text(text = stringResource(it), color = MaterialTheme.colorScheme.error)
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -71,29 +84,35 @@ fun RegistroScreen(
         Button(
             onClick = {
                 if (viewModel.validarFormulario()) {
+                    viewModel.onSubmitting(true)
                     coroutineScope.launch {
                         try {
-                            val nuevoUsuario = authService.register(
+                            authService.register(
                                 name = state.nombre,
-                                pin = state.pin
+                                email = state.email,
+                                password = state.password
                             )
-                            onRegistered(nuevoUsuario.id)
+                            onRegistered()
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (e: Exception) {
-                            e.printStackTrace()
+                            viewModel.onRegisterError(authErrorMessage(e))
                         }
                     }
                 }
             },
+            enabled = !state.isSubmitting,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Registrar")
+            Text(stringResource(R.string.registro_submit))
         }
 
         TextButton(
             onClick = onBack,
+            enabled = !state.isSubmitting,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Volver")
+            Text(stringResource(R.string.action_back))
         }
     }
 }

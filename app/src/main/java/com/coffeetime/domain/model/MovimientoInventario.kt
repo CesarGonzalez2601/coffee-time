@@ -9,5 +9,6 @@ data class MovimientoInventario(
     val stockAnterior: Int,
     val stockNuevo: Int,
     val motivo: String,
-    val fechaTimestamp: Long = System.currentTimeMillis()
+    val fechaTimestamp: Long = System.currentTimeMillis(),
+    val usuarioUid: String
 )

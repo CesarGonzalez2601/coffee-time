@@ -171,7 +171,7 @@ class PagosViewModel(
         )
     }
 
-    fun processPayment(cajeroId: Int, cashierName: String) {
+    fun processPayment(cajeroUid: String, cashierName: String) {
         val state = uiState.value
         val order = state.selectedOrder ?: return
         if (!state.canProcessPayment || state.isProcessing) return
@@ -188,7 +188,7 @@ class PagosViewModel(
                     montoRecibido = amountReceived,
                     cambio = cambio,
                     comprobanteCorrelativo = "",
-                    cajeroId = cajeroId
+                    cajeroUid = cajeroUid
                 )
 
                 val correlative = paymentRepository.processPayment(pago)
@@ -212,7 +212,8 @@ class PagosViewModel(
                                 cantidad = item.cantidad,
                                 stockAnterior = previousStock,
                                 stockNuevo = newStock,
-                                motivo = "Venta Orden #${order.id} ($correlative)"
+                                motivo = "Venta Orden #${order.id} ($correlative)",
+                                usuarioUid = cajeroUid
                             )
                         )
                     }

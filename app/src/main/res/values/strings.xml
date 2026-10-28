@@ -4,16 +4,32 @@
 
     <!-- Login -->
     <string name="login_title">Coffee Time</string>
-    <string name="login_subtitle">Ingresa tu ID y PIN para abrir caja.</string>
+    <string name="login_subtitle">Ingresa tu correo y contraseña para abrir caja.</string>
+    <string name="login_enter">Entrar</string>
     <string name="login_create_account">¿Eres nuevo? Crear cuenta</string>
     <string name="login_demo_enter">Entrar (demo)</string>
 
     <!-- Registro -->
     <string name="registro_title">Crear cuenta</string>
     <string name="registro_demo_finish">Terminar registro (demo)</string>
-    <string name="registro_exito_title">Cuenta creada</string>
-    <string name="registro_exito_message">Tu ID es %1$d. Guárdalo para iniciar sesión.</string>
-    <string name="registro_exito_go_login">Ir a login</string>
+    <string name="registro_name_label">Nombre completo</string>
+    <string name="registro_password_label">Crea tu contraseña</string>
+    <string name="registro_confirm_label">Confirma tu contraseña</string>
+    <string name="registro_submit">Registrar</string>
+    <string name="registro_error_nombre">El nombre debe tener entre 3 y 50 letras.</string>
+    <string name="registro_error_email">Ingresa un correo válido.</string>
+    <string name="registro_error_confirm">Las contraseñas no coinciden.</string>
+
+    <!-- Autenticación (Firebase) -->
+    <string name="auth_email_label">Correo</string>
+    <string name="auth_password_label">Contraseña</string>
+    <string name="auth_error_invalid_credentials">Correo o contraseña incorrectos</string>
+    <string name="auth_error_email_in_use">Ese correo ya tiene cuenta</string>
+    <string name="auth_error_weak_password">La contraseña debe tener al menos 6 caracteres.</string>
+    <string name="auth_error_invalid_email">Revisa el formato del correo.</string>
+    <string name="auth_error_user_disabled">Tu cuenta está desactivada. Habla con el administrador.</string>
+    <string name="auth_error_network">Revisa tu conexión</string>
+    <string name="auth_error_unknown">No se pudo completar. Intenta de nuevo.</string>
 
     <!-- Destinos principales -->
     <string name="nav_inicio">Inicio</string>

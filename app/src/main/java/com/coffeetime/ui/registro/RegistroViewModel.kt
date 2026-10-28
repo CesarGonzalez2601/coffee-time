@@ -1,6 +1,8 @@
 package com.coffeetime.ui.registro
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
+import com.coffeetime.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -13,45 +15,65 @@ class RegistroViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(nombre = nombre, error = null)
     }
 
-    fun onPinChange(pin: String) {
-        if (pin.length <= 4 && pin.all { it.isDigit() }) {
-            _uiState.value = _uiState.value.copy(pin = pin, error = null)
-        }
+    fun onEmailChange(email: String) {
+        _uiState.value = _uiState.value.copy(email = email, error = null)
     }
 
-    fun onConfirmarPinChange(confirmarPin: String) {
-        if (confirmarPin.length <= 4 && confirmarPin.all { it.isDigit() }) {
-            _uiState.value = _uiState.value.copy(confirmarPin = confirmarPin, error = null)
-        }
+    fun onPasswordChange(password: String) {
+        _uiState.value = _uiState.value.copy(password = password, error = null)
     }
 
+    fun onConfirmarPasswordChange(confirmarPassword: String) {
+        _uiState.value = _uiState.value.copy(confirmarPassword = confirmarPassword, error = null)
+    }
+
+    fun onSubmitting(isSubmitting: Boolean) {
+        _uiState.value = _uiState.value.copy(isSubmitting = isSubmitting)
+    }
+
+    fun onRegisterError(@StringRes error: Int) {
+        _uiState.value = _uiState.value.copy(isSubmitting = false, error = error)
+    }
+
+    // Validación mínima; las reglas finales (8+ caracteres, pruebas) llegan en #24.
     fun validarFormulario(): Boolean {
         val state = _uiState.value
 
         val nombreLimpio = state.nombre.trim()
         if (nombreLimpio.length !in 3..50 || !nombreLimpio.all { it.isLetter() || it.isWhitespace() }) {
-            _uiState.value = state.copy(error = "El nombre debe tener entre 3 y 50 letras.")
+            _uiState.value = state.copy(error = R.string.registro_error_nombre)
             return false
         }
 
-        val pinesDebiles = setOf("0000", "1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999", "1234", "9876")
-        if (state.pin.length != 4 || pinesDebiles.contains(state.pin)) {
-            _uiState.value = state.copy(error = "PIN débil o inválido. Evita repetidos o secuencias como 1234.")
+        if (!EMAIL_FORMAT.matches(state.email.trim())) {
+            _uiState.value = state.copy(error = R.string.registro_error_email)
             return false
         }
 
-        if (state.pin != state.confirmarPin) {
-            _uiState.value = state.copy(error = "Los PINs no coinciden.")
+        if (state.password.length < MIN_PASSWORD_LENGTH) {
+            _uiState.value = state.copy(error = R.string.auth_error_weak_password)
+            return false
+        }
+
+        if (state.password != state.confirmarPassword) {
+            _uiState.value = state.copy(error = R.string.registro_error_confirm)
             return false
         }
 
         return true
     }
+
+    private companion object {
+        const val MIN_PASSWORD_LENGTH = 6
+        val EMAIL_FORMAT = Regex("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")
+    }
 }
 
 data class RegistroUiState(
     val nombre: String = "",
-    val pin: String = "",
-    val confirmarPin: String = "",
-    val error: String? = null
+    val email: String = "",
+    val password: String = "",
+    val confirmarPassword: String = "",
+    val isSubmitting: Boolean = false,
+    @StringRes val error: Int? = null
 )

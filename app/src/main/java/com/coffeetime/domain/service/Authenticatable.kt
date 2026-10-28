@@ -5,14 +5,26 @@ import com.coffeetime.domain.model.User
 interface Authenticatable {
 
     suspend fun login(
-        userId: Int,
-        pin: String
+        email: String,
+        password: String
     ): User
 
     suspend fun register(
         name: String,
-        pin: String
+        email: String,
+        password: String
     ): User
+
+    suspend fun loginWithGoogle(
+        idToken: String
+    ): User
+
+    /** Si Firebase guardó una sesión en el dispositivo, la vuelve a abrir sin pedir datos. */
+    suspend fun restoreSession(): User?
+
+    suspend fun sendPasswordReset(
+        email: String
+    )
 
     fun logout()
 }

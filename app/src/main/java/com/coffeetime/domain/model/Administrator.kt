@@ -1,12 +1,14 @@
 package com.coffeetime.domain.model
 
 class Administrator(
-    id: Int,
+    uid: String,
     name: String,
+    email: String,
     active: Boolean = true
 ) : User(
-    id = id,
+    uid = uid,
     name = name,
+    email = email,
     active = active
 ) {
 

@@ -7,11 +7,10 @@ import androidx.room.RoomDatabase
 
 /**
  * Base de datos local. Sin política de migraciones: si cambia el esquema se borra y se
- * vuelve a crear (no hay datos reales que preservar). El seed corre en [UserSeedCallback].
+ * vuelve a crear (no hay datos reales que preservar). El seed corre en [SeedCallback].
  */
 @Database(
     entities = [
-        UserEntity::class,
         ProductEntity::class,
         OrderEntity::class,
         OrderItemEntity::class,
@@ -19,12 +18,11 @@ import androidx.room.RoomDatabase
         InventoryMovementEntity::class,
         CierreCajaEntity::class
     ],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun userDao(): UserDao
     abstract fun productDao(): ProductDao
     abstract fun orderDao(): OrderDao
     abstract fun paymentDao(): PaymentDao
@@ -42,7 +40,7 @@ abstract class AppDatabase : RoomDatabase() {
                 name = NAME
             )
                 .fallbackToDestructiveMigration(dropAllTables = true)
-                .addCallback(UserSeedCallback())
+                .addCallback(SeedCallback())
                 .build()
     }
 }

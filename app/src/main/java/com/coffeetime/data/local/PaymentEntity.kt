@@ -19,8 +19,8 @@ data class PaymentEntity(
     val change: Double,
     val correlative: String,
     val timestamp: Long,
-    @ColumnInfo(name = "cashier_id")
-    val cashierId: Int
+    @ColumnInfo(name = "cashier_uid")
+    val cashierUid: String
 ) {
     fun toDomain(): Pago = Pago(
         id = id,
@@ -30,7 +30,7 @@ data class PaymentEntity(
         cambio = change,
         comprobanteCorrelativo = correlative,
         fechaTimestamp = timestamp,
-        cajeroId = cashierId
+        cajeroUid = cashierUid
     )
 
     companion object {

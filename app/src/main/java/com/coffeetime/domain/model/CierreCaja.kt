@@ -12,6 +12,6 @@ data class CierreCaja(
     val efectivoReportado: Double,
     val diferencia: Double,
     val observaciones: String = "",
-    val cajeroId: Int,
+    val cajeroUid: String,
     val cashierName: String
 )

@@ -1,6 +1,6 @@
-
 package com.coffeetime.ui.login
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,18 +9,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.coffeetime.domain.service.AuthenticationService
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class LoginUiState(
-    val userId: String = "",
-    val pinLength: Int = 0,
+    val email: String = "",
+    val password: String = "",
     val isLoading: Boolean = false,
-    val idError: String? = null,
-    val loginError: String? = null,
-    val errorAnimationId: Int = 0,
+    @StringRes val loginError: Int? = null,
     val isAuthenticated: Boolean = false
-)
+) {
+    val canSubmit: Boolean
+        get() = email.isNotBlank() && password.isNotEmpty() && !isLoading && !isAuthenticated
+}
 
 class LoginViewModel(
     private val auth: AuthenticationService
@@ -29,73 +29,22 @@ class LoginViewModel(
     var state by mutableStateOf(LoginUiState())
         private set
 
-    // El PIN no se almacena en el estado de la pantalla.
-    private var pin = ""
-
-    fun updateId(value: String) {
-        if (state.isLoading || state.isAuthenticated) return
-
-        val digits = value.filter { it in '0'..'9' }
-
+    fun updateEmail(value: String) {
         state = state.copy(
-            userId = digits,
-            idError = if (value != digits) {
-                "El ID debe contener solo números"
-            } else {
-                null
-            },
+            email = value,
             loginError = null
         )
     }
 
-    fun inputDigit(digit: Int) {
-        if (
-            state.isLoading ||
-            state.isAuthenticated ||
-            digit !in 0..9 ||
-            pin.length >= 4
-        ) return
-
-        val id = state.userId.toIntOrNull()
-
-        if (id == null || id <= 0) {
-            state = state.copy(
-                idError = "Ingresa un ID numérico válido"
-            )
-            return
-        }
-
-        pin += digit.toString()
-
+    fun updatePassword(value: String) {
         state = state.copy(
-            pinLength = pin.length,
-            idError = null,
-            loginError = null
-        )
-
-        if (pin.length == 4) {
-            authenticate()
-        }
-    }
-
-    fun deleteDigit() {
-        if (
-            state.isLoading ||
-            state.isAuthenticated ||
-            pin.isEmpty()
-        ) return
-
-        pin = pin.dropLast(1)
-
-        state = state.copy(
-            pinLength = pin.length,
+            password = value,
             loginError = null
         )
     }
 
-    private fun authenticate() {
-        val id = state.userId.toIntOrNull() ?: return
-        val submittedPin = pin
+    fun login() {
+        if (!state.canSubmit) return
 
         state = state.copy(
             isLoading = true,
@@ -104,13 +53,14 @@ class LoginViewModel(
 
         viewModelScope.launch {
             try {
-                auth.login(id, submittedPin)
-
-                pin = ""
+                auth.login(
+                    email = state.email,
+                    password = state.password
+                )
 
                 state = state.copy(
                     isLoading = false,
-                    pinLength = 0,
+                    password = "",
                     isAuthenticated = true
                 )
             } catch (e: CancellationException) {
@@ -118,25 +68,10 @@ class LoginViewModel(
             } catch (e: Exception) {
                 state = state.copy(
                     isLoading = false,
-                    loginError = "ID o PIN incorrectos",
-                    errorAnimationId =
-                        state.errorAnimationId + 1
-                )
-
-                delay(300)
-
-                pin = ""
-
-                state = state.copy(
-                    pinLength = 0
+                    loginError = authErrorMessage(e)
                 )
             }
         }
-    }
-
-    override fun onCleared() {
-        pin = ""
-        super.onCleared()
     }
 
     companion object {

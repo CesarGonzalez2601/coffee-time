@@ -18,7 +18,7 @@ class OrderRepositoryRoom(
             iva = orden.iva,
             total = orden.total,
             status = orden.estado.name,
-            cashierId = orden.cajeroId
+            cashierUid = orden.cajeroUid
         )
 
         val itemEntities = orden.items.map { item ->
@@ -46,7 +46,7 @@ class OrderRepositoryRoom(
             iva = entity.iva,
             total = entity.total,
             estado = runCatching { EstadoOrden.valueOf(entity.status) }.getOrDefault(EstadoOrden.PENDIENTE),
-            cajeroId = entity.cashierId
+            cajeroUid = entity.cashierUid
         )
     }
 
@@ -62,7 +62,7 @@ class OrderRepositoryRoom(
                     iva = entity.iva,
                     total = entity.total,
                     estado = runCatching { EstadoOrden.valueOf(entity.status) }.getOrDefault(EstadoOrden.PENDIENTE),
-                    cajeroId = entity.cashierId
+                    cajeroUid = entity.cashierUid
                 )
             }
         }
@@ -80,7 +80,7 @@ class OrderRepositoryRoom(
                     iva = entity.iva,
                     total = entity.total,
                     estado = status,
-                    cajeroId = entity.cashierId
+                    cajeroUid = entity.cashierUid
                 )
             }
         }

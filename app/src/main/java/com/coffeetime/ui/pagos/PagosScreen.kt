@@ -157,7 +157,7 @@ fun PagosScreen(
                 onAmountReceivedChanged = viewModel::onAmountReceivedChange,
                 onQuickCash = viewModel::addQuickCashAmount,
                 onProcessPayment = {
-                    viewModel.processPayment(cajeroId = user.id, cashierName = user.name)
+                    viewModel.processPayment(cajeroUid = user.uid, cashierName = user.name)
                 }
             )
         } else {
