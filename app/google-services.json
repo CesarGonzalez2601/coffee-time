@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "303089730950",
+    "project_id": "coffee-time-966f2",
+    "storage_bucket": "coffee-time-966f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:303089730950:android:c7786ad9fbdb0e8aa71807",
+        "android_client_info": {
+          "package_name": "com.coffeetime"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeUAcqcoS2rApdurUtLm6Knny2nUvtDZE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
