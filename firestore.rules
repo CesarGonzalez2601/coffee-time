@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// Reglas de Coffee Time. Se publican con `firebase deploy --only firestore:rules`
+// o copiándolas en la consola (Firestore Database → Reglas).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMINISTRATOR';
+    }
+
+    // Perfiles: cada quien lee el suyo y nadie se cambia el rol ni se reactiva.
+    // El rol ADMINISTRATOR se marca a mano en la consola (o lo cambia otro admin).
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'active', 'createdAt'])
+        && request.resource.data.role == 'CASHIER'
+        && request.resource.data.active == true;
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']));
+
+      allow delete: if false;
+    }
+
+    // Colecciones del café (productos, órdenes, pagos, inventario, cierres,
+    // contadores): las agrega #25.
+  }
+}
