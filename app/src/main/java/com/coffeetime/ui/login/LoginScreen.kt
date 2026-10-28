@@ -1,26 +1,19 @@
-
 package com.coffeetime.ui.login
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,17 +27,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coffeetime.CoffeeTimeApp
 import com.coffeetime.R
-import kotlin.math.roundToInt
+import com.coffeetime.ui.theme.Size
+import com.coffeetime.ui.theme.Space
 
+// Versión mínima con correo y contraseña; el diseño final y Google llegan en #24.
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -52,11 +45,9 @@ fun LoginScreen(
     modifier: Modifier = Modifier
 ) {
 
-    // Obtener AuthenticationService desde AppContainer
     val app = LocalContext.current
         .applicationContext as CoffeeTimeApp
 
-    // Inicializar LoginViewModel
     val loginViewModel: LoginViewModel = viewModel(
         factory = remember(app) {
             LoginViewModel.factory(
@@ -65,41 +56,11 @@ fun LoginScreen(
         }
     )
 
-    // Estado del login
     val state = loginViewModel.state
 
-    // Animación para PIN incorrecto
-    val shakeOffset = remember {
-        Animatable(0f)
-    }
-
-    // Navegar cuando el login sea exitoso
     LaunchedEffect(state.isAuthenticated) {
         if (state.isAuthenticated) {
             onLoginSuccess()
-        }
-    }
-
-    // Vibración visual de 300 ms
-    LaunchedEffect(state.errorAnimationId) {
-
-        if (state.errorAnimationId > 0) {
-
-            repeat(6) { index ->
-
-                shakeOffset.animateTo(
-                    targetValue = if (index % 2 == 0) {
-                        10f
-                    } else {
-                        -10f
-                    },
-                    animationSpec = tween(
-                        durationMillis = 50
-                    )
-                )
-            }
-
-            shakeOffset.snapTo(0f)
         }
     }
 
@@ -109,197 +70,119 @@ fun LoginScreen(
             .verticalScroll(
                 rememberScrollState()
             )
-            .padding(
-                horizontal = 24.dp,
-                vertical = 24.dp
-            ),
+            .padding(Space.s6),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
 
-        // LOGO
         Icon(
             imageVector = Icons.Filled.LocalCafe,
-            contentDescription = "Coffee Time",
-            modifier = Modifier.size(72.dp),
+            contentDescription = stringResource(R.string.app_name),
+            modifier = Modifier.size(Space.s12 + Space.s6),
             tint = MaterialTheme.colorScheme.primary
         )
 
         Spacer(
-            modifier = Modifier.height(16.dp)
+            modifier = Modifier.height(Space.s4)
         )
 
-        // TÍTULO
         Text(
-            text = stringResource(
-                R.string.login_title
-            ),
+            text = stringResource(R.string.login_title),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold
         )
 
         Spacer(
-            modifier = Modifier.height(8.dp)
+            modifier = Modifier.height(Space.s2)
         )
 
-        // SUBTÍTULO
         Text(
-            text = stringResource(
-                R.string.login_subtitle
-            ),
+            text = stringResource(R.string.login_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(
-            modifier = Modifier.height(32.dp)
+            modifier = Modifier.height(Space.s8)
         )
 
-        // CAMPO ID
         OutlinedTextField(
-            value = state.userId,
-            onValueChange = {
-                loginViewModel.updateId(it)
-            },
+            value = state.email,
+            onValueChange = loginViewModel::updateEmail,
             label = {
-                Text("ID de usuario")
-            },
-            placeholder = {
-                Text("Ingresa tu ID")
+                Text(stringResource(R.string.auth_email_label))
             },
             singleLine = true,
-            enabled = !state.isLoading &&
-                    !state.isAuthenticated,
-            isError = state.idError != null,
-            supportingText = state.idError?.let { error ->
-                {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
+            enabled = !state.isLoading && !state.isAuthenticated,
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
             ),
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(Space.s3)
         )
 
-        // TÍTULO PIN
-        Text(
-            text = "Ingresa tu PIN",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
-
-        // INDICADORES PIN (4 PUNTOS)
-        Row(
-            modifier = Modifier
-                .offset {
-                    IntOffset(
-                        x = shakeOffset.value.roundToInt(),
-                        y = 0
-                    )
-                }
-                .semantics {
-                    contentDescription =
-                        "${state.pinLength} de 4 dígitos ingresados"
-                },
-            horizontalArrangement = Arrangement.spacedBy(
-                20.dp
+        OutlinedTextField(
+            value = state.password,
+            onValueChange = loginViewModel::updatePassword,
+            label = {
+                Text(stringResource(R.string.auth_password_label))
+            },
+            singleLine = true,
+            enabled = !state.isLoading && !state.isAuthenticated,
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
             ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            repeat(4) { index ->
-
-                val isFilled = index < state.pinLength
-
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .background(
-                            color = if (isFilled) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.outlineVariant
-                            },
-                            shape = CircleShape
-                        )
-                )
-            }
-        }
-
-        Spacer(
-            modifier = Modifier.height(20.dp)
+            modifier = Modifier.fillMaxWidth()
         )
 
-        // MENSAJE ERROR
-        if (state.loginError != null) {
+        Spacer(
+            modifier = Modifier.height(Space.s4)
+        )
 
+        state.loginError?.let { error ->
             Text(
-                text = state.loginError,
+                text = stringResource(error),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium
             )
 
-        } else {
-
             Spacer(
-                modifier = Modifier.height(20.dp)
+                modifier = Modifier.height(Space.s4)
             )
         }
 
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-
-        // INDICADOR DE CARGA
         if (state.isLoading) {
-
             CircularProgressIndicator(
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(Size.button)
             )
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
+        } else {
+            Button(
+                onClick = loginViewModel::login,
+                enabled = state.canSubmit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(Size.buttonLarge)
+            ) {
+                Text(stringResource(R.string.login_enter))
+            }
         }
 
-        // TECLADO NUMÉRICO PERSONALIZADO
-        PinPad(
-            enabled = !state.isLoading &&
-                    !state.isAuthenticated &&
-                    state.pinLength < 4,
-            onDigit = { digit ->
-                loginViewModel.inputDigit(digit)
-            },
-            onDelete = {
-                loginViewModel.deleteDigit()
-            }
-        )
-
         Spacer(
-            modifier = Modifier.height(32.dp)
+            modifier = Modifier.height(Space.s6)
         )
 
-        // CREAR CUENTA
         TextButton(
             onClick = onCreateAccount,
             enabled = !state.isLoading
         ) {
-
             Text(
-                text = stringResource(
-                    R.string.login_create_account
-                )
+                text = stringResource(R.string.login_create_account)
             )
         }
     }

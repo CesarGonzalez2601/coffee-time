@@ -31,5 +31,9 @@ interface AuthGateway {
         idToken: String
     ): AuthAccount
 
+    suspend fun sendPasswordReset(
+        email: String
+    )
+
     fun signOut()
 }

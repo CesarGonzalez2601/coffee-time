@@ -20,6 +20,9 @@ class FakeAuthGateway : AuthGateway {
     private var current: AuthAccount? = null
     private var nextUid = 1
 
+    /** Correos a los que se pidió restablecer la contraseña, en orden. */
+    val passwordResets = mutableListOf<String>()
+
     override fun currentAccount(): AuthAccount? = current
 
     override suspend fun signInWithEmail(
@@ -77,6 +80,13 @@ class FakeAuthGateway : AuthGateway {
             )
         current = account
         return account
+    }
+
+    override suspend fun sendPasswordReset(
+        email: String
+    ) {
+        // Firebase no avisa si el correo no existe; el fake tampoco.
+        passwordResets += email.trim().lowercase()
     }
 
     override fun signOut() {

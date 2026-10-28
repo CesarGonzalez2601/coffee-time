@@ -10,9 +10,6 @@ object Login
 object Registro
 
 @Serializable
-data class RegistroExito(val userId: Int)
-
-@Serializable
 object Main
 
 // Pestañas dentro de Main
