@@ -71,6 +71,7 @@ import com.coffeetime.domain.model.CategoriaProducto
 import com.coffeetime.domain.model.MovimientoInventario
 import com.coffeetime.domain.model.Producto
 import com.coffeetime.domain.model.TipoMovimiento
+import com.coffeetime.domain.model.User
 import com.coffeetime.ui.theme.Size
 import com.coffeetime.ui.theme.Space
 import java.time.Instant
@@ -83,6 +84,7 @@ private val EMOJI_OPTIONS = listOf("☕", "🥛", "🧊", "🧋", "🥤", "🥐"
 @Composable
 fun InventarioScreen(
     viewModel: InventarioViewModel,
+    user: User,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -92,7 +94,7 @@ fun InventarioScreen(
         StockAdjustmentDialog(
             form = uiState.adjustmentFormState!!,
             onUpdateForm = viewModel::updateAdjustmentForm,
-            onSubmit = viewModel::submitStockAdjustment,
+            onSubmit = { viewModel.submitStockAdjustment(user.uid) },
             onDismiss = viewModel::closeAdjustmentDialog
         )
     }
@@ -101,7 +103,7 @@ fun InventarioScreen(
         NewProductDialog(
             form = uiState.newProductFormState!!,
             onUpdateForm = viewModel::updateNewProductForm,
-            onSubmit = viewModel::submitNewProduct,
+            onSubmit = { viewModel.submitNewProduct(user.uid) },
             onDismiss = viewModel::closeNewProductDialog
         )
     }
