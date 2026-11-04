@@ -85,6 +85,14 @@ fun MasScreen(
         }
     }
 
+    val errorMsg = uiState.cierreErrorMessage
+    LaunchedEffect(errorMsg) {
+        if (errorMsg != null) {
+            snackbarHostState.showSnackbar(errorMsg)
+            viewModel.dismissErrorMessage()
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -168,7 +176,10 @@ fun MasScreen(
                         viewModel.realizarCierreCaja(cajeroUid = user.uid, cashierName = user.name)
                     }
                 )
-                1 -> ReportesVentasView(uiState = uiState)
+                1 -> ReportesVentasView(
+                    uiState = uiState,
+                    onFiltroSelected = viewModel::onFiltroFechaSeleccionado
+                )
                 2 -> HistorialCierresView(cierres = uiState.historialCierres)
             }
         }
@@ -402,72 +413,139 @@ private fun ArqueoCierreView(
 @Composable
 private fun ReportesVentasView(
     uiState: ReportesUiState,
+    onFiltroSelected: (FiltroFecha) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(Space.s3)
     ) {
-        // Tarjetas de Ventas por Período
         item {
-            Text(
-                text = stringResource(R.string.reporte_periodos),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Space.s2)
+            ) {
+                FilterChip(
+                    text = "Hoy",
+                    selected = uiState.filtroFechaSeleccionado == FiltroFecha.HOY,
+                    onClick = { onFiltroSelected(FiltroFecha.HOY) }
+                )
+                FilterChip(
+                    text = "Esta semana",
+                    selected = uiState.filtroFechaSeleccionado == FiltroFecha.ESTA_SEMANA,
+                    onClick = { onFiltroSelected(FiltroFecha.ESTA_SEMANA) }
+                )
+                FilterChip(
+                    text = "Este mes",
+                    selected = uiState.filtroFechaSeleccionado == FiltroFecha.ESTE_MES,
+                    onClick = { onFiltroSelected(FiltroFecha.ESTE_MES) }
+                )
+            }
+        }
 
-            Spacer(modifier = Modifier.height(Space.s2))
-
+        item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Space.s2)
             ) {
                 PeriodCard(
-                    title = stringResource(R.string.ventas_dia),
-                    amount = uiState.ventasHoy,
+                    title = "Ingresos",
+                    amount = String.format(Locale.US, "$%.2f", uiState.reporteActual.ingresosTotales),
                     modifier = Modifier.weight(1f)
                 )
 
                 PeriodCard(
-                    title = stringResource(R.string.ventas_semana),
-                    amount = uiState.ventasSemana,
-                    modifier = Modifier.weight(1f)
-                )
-
-                PeriodCard(
-                    title = stringResource(R.string.ventas_mes),
-                    amount = uiState.ventasMes,
+                    title = "Órdenes",
+                    amount = uiState.reporteActual.ordenesCerradas.toString(),
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        // Top 5 Productos Más Vendidos
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Space.s2)
+            ) {
+                PeriodCard(
+                    title = "Ticket promedio",
+                    amount = String.format(Locale.US, "$%.2f", uiState.reporteActual.ticketPromedio),
+                    modifier = Modifier.weight(1f)
+                )
+
+                PeriodCard(
+                    title = "Más vendido",
+                    amount = uiState.reporteActual.top5Productos.firstOrNull()?.nombre ?: "N/A",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
         item {
             Spacer(modifier = Modifier.height(Space.s2))
-
             Text(
-                text = stringResource(R.string.top_productos_titulo),
-                style = MaterialTheme.typography.titleMedium,
+                text = "Por método de pago",
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
-
             Spacer(modifier = Modifier.height(Space.s2))
 
-            if (uiState.top5Productos.isEmpty()) {
-                OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+            uiState.reporteActual.ventasPorMetodoPago.forEach { (metodo, total) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = metodo, style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        text = stringResource(R.string.sin_ventas_reporte),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(Space.s4),
-                        textAlign = TextAlign.Center
+                        text = String.format(Locale.US, "$%.2f", total),
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(Space.s2))
+            Text(
+                text = "Por categoría (sin IVA)",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(Space.s2))
+
+            uiState.reporteActual.ventasPorCategoria.forEach { (categoria, total) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = categoria, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = String.format(Locale.US, "$%.2f", total),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(Space.s2))
+            Text(
+                text = "Top 5 Productos",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(Space.s2))
+
+            if (uiState.reporteActual.top5Productos.isEmpty()) {
+                Text(
+                    text = "Sin ventas en este periodo",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(Space.s2)
+                )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.s2)) {
-                    uiState.top5Productos.forEach { topItem ->
-                        TopProductCard(item = topItem)
+                    uiState.reporteActual.top5Productos.forEachIndexed { index, topItem ->
+                        TopProductCard(item = topItem, ranking = index + 1)
                     }
                 }
             }
@@ -476,9 +554,31 @@ private fun ReportesVentasView(
 }
 
 @Composable
+fun FilterChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
 private fun PeriodCard(
     title: String,
-    amount: Double,
+    amount: String,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -487,23 +587,21 @@ private fun PeriodCard(
     ) {
         Column(
             modifier = Modifier.padding(Space.s3),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Start
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(Space.s1))
 
             Text(
-                text = String.format(Locale.US, "$%.2f", amount),
-                style = MaterialTheme.typography.titleMedium,
+                text = amount,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -511,7 +609,8 @@ private fun PeriodCard(
 
 @Composable
 private fun TopProductCard(
-    item: TopProductItem,
+    item: com.coffeetime.domain.model.ProductoVendido,
+    ranking: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -534,16 +633,12 @@ private fun TopProductCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "#${item.ranking}",
+                        text = "#$ranking",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-
-                Spacer(modifier = Modifier.width(Space.s2))
-
-                Text(text = item.emoji, fontSize = 24.sp)
 
                 Spacer(modifier = Modifier.width(Space.s2))
 
@@ -556,12 +651,12 @@ private fun TopProductCard(
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = String.format(Locale.US, "%d unidades", item.cantidadVendida),
+                    text = String.format(Locale.US, "%d unidades", item.cantidad),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = String.format(Locale.US, "$%.2f", item.totalMonto),
+                    text = String.format(Locale.US, "$%.2f", item.total),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
