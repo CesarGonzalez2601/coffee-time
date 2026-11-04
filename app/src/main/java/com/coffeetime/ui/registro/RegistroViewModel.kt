@@ -6,6 +6,17 @@ import com.coffeetime.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+data class RegistroUiState(
+    val nombre: String = "",
+    val email: String = "",
+    val password: String = "",
+    val confirmarPassword: String = "",
+    val isPasswordVisible: Boolean = false,
+    val isConfirmPasswordVisible: Boolean = false,
+    val isSubmitting: Boolean = false,
+    @StringRes val error: Int? = null
+)
+
 class RegistroViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegistroUiState())
@@ -27,6 +38,14 @@ class RegistroViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(confirmarPassword = confirmarPassword, error = null)
     }
 
+    fun togglePasswordVisibility() {
+        _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
+    }
+
+    fun toggleConfirmPasswordVisibility() {
+        _uiState.value = _uiState.value.copy(isConfirmPasswordVisible = !_uiState.value.isConfirmPasswordVisible)
+    }
+
     fun onSubmitting(isSubmitting: Boolean) {
         _uiState.value = _uiState.value.copy(isSubmitting = isSubmitting)
     }
@@ -35,7 +54,6 @@ class RegistroViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(isSubmitting = false, error = error)
     }
 
-    // Validación mínima; las reglas finales (8+ caracteres, pruebas) llegan en #24.
     fun validarFormulario(): Boolean {
         val state = _uiState.value
 
@@ -68,12 +86,3 @@ class RegistroViewModel : ViewModel() {
         val EMAIL_FORMAT = Regex("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")
     }
 }
-
-data class RegistroUiState(
-    val nombre: String = "",
-    val email: String = "",
-    val password: String = "",
-    val confirmarPassword: String = "",
-    val isSubmitting: Boolean = false,
-    @StringRes val error: Int? = null
-)

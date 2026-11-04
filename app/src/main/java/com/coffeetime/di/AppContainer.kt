@@ -1,14 +1,13 @@
 package com.coffeetime.di
 
 import android.content.Context
+import com.coffeetime.data.firebase.CierreCajaRepositoryFirestore
 import com.coffeetime.data.firebase.FirebaseAuthGateway
+import com.coffeetime.data.firebase.InventoryRepositoryFirestore
+import com.coffeetime.data.firebase.OrderRepositoryFirestore
+import com.coffeetime.data.firebase.PaymentRepositoryFirestore
+import com.coffeetime.data.firebase.ProductRepositoryFirestore
 import com.coffeetime.data.firebase.UserRepositoryFirestore
-import com.coffeetime.data.local.AppDatabase
-import com.coffeetime.data.local.CierreCajaRepositoryRoom
-import com.coffeetime.data.local.InventoryRepositoryRoom
-import com.coffeetime.data.local.OrderRepositoryRoom
-import com.coffeetime.data.local.PaymentRepositoryRoom
-import com.coffeetime.data.local.ProductRepositoryRoom
 import com.coffeetime.domain.repository.CierreCajaRepository
 import com.coffeetime.domain.repository.InventoryRepository
 import com.coffeetime.domain.repository.OrderRepository
@@ -35,10 +34,6 @@ class DefaultAppContainer(
     private val context: Context
 ) : AppContainer {
 
-    private val database: AppDatabase by lazy {
-        AppDatabase.build(context)
-    }
-
     private val authGateway: AuthGateway by lazy {
         FirebaseAuthGateway()
     }
@@ -48,33 +43,23 @@ class DefaultAppContainer(
     }
 
     override val productRepository: ProductRepository by lazy {
-        ProductRepositoryRoom(
-            productDao = database.productDao()
-        )
+        ProductRepositoryFirestore()
     }
 
     override val orderRepository: OrderRepository by lazy {
-        OrderRepositoryRoom(
-            orderDao = database.orderDao()
-        )
+        OrderRepositoryFirestore()
     }
 
     override val paymentRepository: PaymentRepository by lazy {
-        PaymentRepositoryRoom(
-            paymentDao = database.paymentDao()
-        )
+        PaymentRepositoryFirestore()
     }
 
     override val inventoryRepository: InventoryRepository by lazy {
-        InventoryRepositoryRoom(
-            inventoryMovementDao = database.inventoryMovementDao()
-        )
+        InventoryRepositoryFirestore()
     }
 
     override val cierreCajaRepository: CierreCajaRepository by lazy {
-        CierreCajaRepositoryRoom(
-            cierreCajaDao = database.cierreCajaDao()
-        )
+        CierreCajaRepositoryFirestore()
     }
 
     override val session: Session = Session()

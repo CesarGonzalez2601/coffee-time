@@ -8,6 +8,12 @@
     <string name="login_enter">Entrar</string>
     <string name="login_create_account">¿Eres nuevo? Crear cuenta</string>
     <string name="login_demo_enter">Entrar (demo)</string>
+    <string name="forgot_password_link">¿Olvidaste tu contraseña?</string>
+    <string name="forgot_password_title">Recuperar Contraseña</string>
+    <string name="forgot_password_instructions">Ingresa tu correo electrónico registrado para recibir el enlace de recuperación:</string>
+    <string name="send_reset_link">Enviar Correo de Recuperación</string>
+    <string name="reset_link_sent_success">Correo enviado exitosamente. Revisa tu bandeja de entrada.</string>
+    <string name="login_google">Continuar con Google</string>
 
     <!-- Registro -->
     <string name="registro_title">Crear cuenta</string>

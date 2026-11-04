@@ -14,9 +14,15 @@ import kotlinx.coroutines.launch
 data class LoginUiState(
     val email: String = "",
     val password: String = "",
+    val isPasswordVisible: Boolean = false,
     val isLoading: Boolean = false,
     @StringRes val loginError: Int? = null,
-    val isAuthenticated: Boolean = false
+    val isAuthenticated: Boolean = false,
+    val showForgotPasswordDialog: Boolean = false,
+    val forgotPasswordEmail: String = "",
+    val isSendingReset: Boolean = false,
+    val resetSentSuccess: Boolean = false,
+    @StringRes val resetError: Int? = null
 ) {
     val canSubmit: Boolean
         get() = email.isNotBlank() && password.isNotEmpty() && !isLoading && !isAuthenticated
@@ -41,6 +47,84 @@ class LoginViewModel(
             password = value,
             loginError = null
         )
+    }
+
+    fun togglePasswordVisibility() {
+        state = state.copy(isPasswordVisible = !state.isPasswordVisible)
+    }
+
+    fun openForgotPasswordDialog() {
+        state = state.copy(
+            showForgotPasswordDialog = true,
+            forgotPasswordEmail = state.email,
+            resetSentSuccess = false,
+            resetError = null
+        )
+    }
+
+    fun closeForgotPasswordDialog() {
+        state = state.copy(
+            showForgotPasswordDialog = false,
+            resetSentSuccess = false,
+            resetError = null
+        )
+    }
+
+    fun updateForgotPasswordEmail(value: String) {
+        state = state.copy(
+            forgotPasswordEmail = value,
+            resetError = null
+        )
+    }
+
+    fun sendPasswordReset() {
+        val targetEmail = state.forgotPasswordEmail.trim()
+        if (targetEmail.isBlank()) return
+
+        state = state.copy(isSendingReset = true, resetError = null)
+
+        viewModelScope.launch {
+            try {
+                auth.sendPasswordReset(targetEmail)
+                state = state.copy(
+                    isSendingReset = false,
+                    resetSentSuccess = true
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                state = state.copy(
+                    isSendingReset = false,
+                    resetError = authErrorMessage(e)
+                )
+            }
+        }
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        if (state.isLoading) return
+
+        state = state.copy(
+            isLoading = true,
+            loginError = null
+        )
+
+        viewModelScope.launch {
+            try {
+                auth.loginWithGoogle(idToken)
+                state = state.copy(
+                    isLoading = false,
+                    isAuthenticated = true
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                state = state.copy(
+                    isLoading = false,
+                    loginError = authErrorMessage(e)
+                )
+            }
+        }
     }
 
     fun login() {

@@ -15,7 +15,6 @@ service cloud.firestore {
     }
 
     // Perfiles: cada quien lee el suyo y nadie se cambia el rol ni se reactiva.
-    // El rol ADMINISTRATOR se marca a mano en la consola (o lo cambia otro admin).
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
 
@@ -33,7 +32,30 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Colecciones del café (productos, órdenes, pagos, inventario, cierres,
-    // contadores): las agrega #25.
+    // Colecciones del café
+    match /productos/{id} {
+      allow read: if signedIn();
+      allow write: if signedIn();
+    }
+
+    match /ordenes/{id} {
+      allow read, write: if signedIn();
+    }
+
+    match /pagos/{id} {
+      allow read, write: if signedIn();
+    }
+
+    match /movimientos_inventario/{id} {
+      allow read, write: if signedIn();
+    }
+
+    match /cierres_caja/{id} {
+      allow read, write: if signedIn();
+    }
+
+    match /contadores/{coleccion} {
+      allow read, write: if signedIn();
+    }
   }
 }
