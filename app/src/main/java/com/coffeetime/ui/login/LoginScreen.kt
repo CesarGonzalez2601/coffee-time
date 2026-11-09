@@ -1,5 +1,6 @@
 package com.coffeetime.ui.login
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,13 +46,17 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coffeetime.CoffeeTimeApp
 import com.coffeetime.R
 import com.coffeetime.ui.theme.Size
 import com.coffeetime.ui.theme.Space
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
+
+private const val WEB_CLIENT_ID = "303089730950-7qr98ictsn32ri3glh3v3quvauncg65f.apps.googleusercontent.com"
 
 @Composable
 fun LoginScreen(
@@ -213,7 +217,7 @@ fun LoginScreen(
                             val credentialManager = CredentialManager.create(context)
                             val googleIdOption = GetGoogleIdOption.Builder()
                                 .setFilterByAuthorizedAccounts(false)
-                                .setServerClientId("YOUR_SERVER_CLIENT_ID")
+                                .setServerClientId(WEB_CLIENT_ID)
                                 .build()
 
                             val request = GetCredentialRequest.Builder()
@@ -225,11 +229,14 @@ fun LoginScreen(
                                 request = request
                             )
 
-                            val googleIdTokenCredential = com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(result.credential.data)
+                            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
                             val idToken = googleIdTokenCredential.idToken
 
                             loginViewModel.signInWithGoogle(idToken)
-                        } catch (_: Exception) {
+                        } catch (e: GetCredentialException) {
+                            Log.w("LoginScreen", "Google Sign-In canceled or failed", e)
+                        } catch (e: Exception) {
+                            Log.w("LoginScreen", "Google Sign-In exception", e)
                         }
                     }
                 },

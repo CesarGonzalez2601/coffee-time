@@ -4,20 +4,20 @@ App Android de caja para una cafetería (proyecto universitario). La usan el **c
 
 > La versión de consola (Etapa 2: Kotlin/JVM + SQLite JDBC) quedó guardada en el tag [`etapa-2`](https://github.com/CesarGonzalez2601/coffee-time/tree/etapa-2). Desde la Etapa 3 el repo es un proyecto de Android Studio.
 
-## Video de Presentación
+## Video de Presentación y Documentación
 
-🎥 [Ver video de demostración y presentación en Google Drive](https://drive.google.com/drive/folders/1TgL_vfY3m7yRUuDtY36dNVMFBANiTbbE?usp=sharing)
+🎥 [Ver video de demostración y documento PDF de investigación en Google Drive](https://drive.google.com/drive/folders/1PAOZJWKvqeEEvVMTIzZqIn3ie5bq555Q?usp=sharing)
 
 ## Estado de Funcionalidades
 
 | Módulo / Funcionalidad | Descripción | Estado |
 | --- | --- | --- |
-| **Usuarios y Auth** | Firebase Auth (correo y contraseña; Google en #24), perfiles y roles en Firestore `users/{uid}`, sesión persistente y RBAC por rol | Listo (Google en curso) |
-| **Catálogo y Carrito (Órdenes)** | Vista visual por categorías, buscador, carrito con subtotal, IVA (13%) y total | Listo |
-| **Procesamiento de Pagos** | Pago efectivo/tarjeta, calculadora de cambio, comprobante con correlativo y ticket | Listo |
-| **Gestión de Inventario** | Alertas de stock bajo, ajuste manual, trazabilidad de movimientos y CRUD completo de productos (crear, editar, eliminar) | Listo |
-| **Reportes y Cierre de Caja** | Métricas en Inicio, ventas por período (hoy, semana, mes), Top 5 productos más vendidos, arqueo y cierre diario aislado por jornada | Listo |
-| **Persistencia Room** | Entidades y DAOs para `Product`, `Order`, `OrderItem`, `Payment`, `InventoryMovement` y `CierreCaja` (pasan a Firestore en #25) | Listo |
+| **Usuarios y Auth** | Firebase Auth (correo y contraseña, recuperación por correo, Google con Credential Manager), perfiles y roles en Firestore `users/{uid}`, sesión persistente y RBAC por rol | Listo |
+| **Catálogo y Carrito (Órdenes)** | Vista visual por categorías, buscador, carrito con subtotal, IVA (13%) y total en Firestore `ordenes/{id}` | Listo |
+| **Procesamiento de Pagos** | Pago efectivo/tarjeta, calculadora de cambio, comprobante con correlativo y ticket en Firestore `pagos/{id}` | Listo |
+| **Gestión de Inventario** | Alertas de stock bajo, ajuste manual, trazabilidad de movimientos y CRUD completo de productos (crear, editar, eliminar) en Firestore `productos/{id}` y `movimientos_inventario/{id}` | Listo |
+| **Reportes y Cierre de Caja** | Métricas en Inicio, ventas por período (hoy, semana, mes), Top 5 productos más vendidos, arqueo y cierre diario aislado por jornada en Firestore `cierres_caja/{id}` | Listo |
+| **Persistencia Firestore** | Todos los repositorios conectados a Cloud Firestore con `snapshots()` en tiempo real y transacciones atómicas de contadores | Listo |
 
 ## Tech stack
 
@@ -29,8 +29,8 @@ Todas las versiones están fijas en [`gradle/libs.versions.toml`](gradle/libs.ve
 | UI | Jetpack Compose + Material 3 |
 | Navegación | Navigation Compose type-safe (`@Serializable`) |
 | Estado | ViewModel (MVVM) con StateFlow y Flow reactive streams |
-| Autenticación | Firebase Auth (correo/contraseña y Google con Credential Manager) |
-| Base de datos | Cloud Firestore para usuarios; Room (SQLite local) v5 para los datos del café hasta #25 |
+| Autenticación | Firebase Auth (correo/contraseña, recuperación por correo y Google con Credential Manager) |
+| Base de datos | Cloud Firestore (colecciones `users`, `productos`, `ordenes`, `pagos`, `movimientos_inventario`, `cierres_caja`, `contadores`) |
 | DI | Manual, en `AppContainer` |
 | Logs | `android.util.Log` (Logcat) |
 | Android | minSdk 26 (Android 8.0), compile/targetSdk 37 |
@@ -80,7 +80,7 @@ Correo y contraseña funcionan sin este paso. Las reglas de seguridad están en 
 | `admin@coffeetime.test` | `admin123` | Administrador | Todos (*Crear órdenes, Cobrar, Inventario/CRUD, Reportes/Cierre*) |
 | `cajero@coffeetime.test` | `cajero123` | Cajero | *Crear órdenes* y *Cobrar* |
 
-Son cuentas solo para pruebas. Toda cuenta nueva se registra como **cajero**; el rol de administrador se marca a mano en Firestore (`users/{uid}` → `role: "ADMINISTRATOR"`). Al abrir la base por primera vez se siembran **12 productos iniciales** (`SeedCallback`).
+Toda cuenta nueva registrada en la app ingresa por defecto con el rol de **cajero**; el rol de administrador se marca a mano en la consola web de Firebase (`users/{uid}` → `role: "ADMINISTRATOR"`).
 
 ## Arquitectura
 
@@ -89,7 +89,7 @@ Tres capas. La UI nunca toca la base de datos: siempre le pide al dominio a trav
 ```mermaid
 flowchart TD
     UI["ui/<br/>Composables + ViewModels"] --> Domain["domain/<br/>modelos, servicios, interfaces de repositorio"]
-    Data["data/<br/>Firebase + Room"] -. implementa .-> Domain
+    Data["data/<br/>Firebase Cloud Firestore + Firebase Auth"] -. implementa .-> Domain
     App["CoffeeTimeApp<br/>AppContainer"] --> UI
     App --> Data
 ```
@@ -105,13 +105,14 @@ app/src/main/java/com/coffeetime/
 │   ├── repository/         UserRepository, ProductRepository, OrderRepository, PaymentRepository, InventoryRepository, CierreCajaRepository
 │   └── service/            AuthenticationService, AuthGateway, Session
 ├── data/
-│   ├── firebase/           FirebaseAuthGateway, UserRepositoryFirestore
-│   ├── fake/               FakeAuthGateway, FakeUserRepository (pruebas JVM)
-│   └── local/              Room: ProductEntity, OrderEntity, OrderItemEntity, PaymentEntity, InventoryMovementEntity, CierreCajaEntity, DAOs, AppDatabase, seed
+│   ├── firebase/           FirebaseAuthGateway, UserRepositoryFirestore, ProductRepositoryFirestore, OrderRepositoryFirestore, PaymentRepositoryFirestore, InventoryRepositoryFirestore, CierreCajaRepositoryFirestore
+│   └── fake/               FakeAuthGateway, FakeUserRepository (pruebas JVM)
 └── ui/
     ├── theme/              Color, Theme, Type, Shape, Dimens (design system)
     ├── navigation/         Routes.kt + CoffeeTimeNavHost.kt
-    ├── login/  registro/  main/
+    ├── login/              LoginScreen (con correo, ojo mostrar clave, Olvidé clave, Google)
+    ├── registro/           RegistroScreen (creación de cuenta)
+    ├── main/               MainScreen y navegación por pestañas
     ├── ordenes/            Catálogo por categoría + Carrito de compras + Desglose financiero
     ├── pagos/              Cobro efectivo/tarjeta + Calculadora de cambio + Historial de pagos + Comprobante
     ├── inventario/         Alertas stock bajo + Ajuste de stock + Historial de movimientos + CRUD Productos
