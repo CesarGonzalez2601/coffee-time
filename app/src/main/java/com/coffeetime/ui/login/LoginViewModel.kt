@@ -77,6 +77,13 @@ class LoginViewModel(
         )
     }
 
+    fun setCustomError(@StringRes errorRes: Int) {
+        state = state.copy(
+            isLoading = false,
+            loginError = errorRes
+        )
+    }
+
     fun sendPasswordReset() {
         val targetEmail = state.forgotPasswordEmail.trim()
         if (targetEmail.isBlank()) return

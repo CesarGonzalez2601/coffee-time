@@ -123,6 +123,14 @@ app/src/main/java/com/coffeetime/
 
 La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títulos, Figtree para el resto, botones en píldora. Fuentes bajo SIL OFL 1.1 (ver [`licenses/`](licenses/)).
 
+## Licencia
+
+[![CC BY 4.0](https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by.svg)](http://creativecommons.org/licenses/by/4.0/)
+
+Este proyecto está distribuido bajo los términos de la Licencia **Creative Commons Atribución 4.0 Internacional (CC BY 4.0)**. Eres libre de compartir, copiar, redistribuir y adaptar este material para cualquier propósito, incluso comercial, siempre y cuando se otorgue el crédito adecuado al equipo de desarrollo de Coffee Time.
+
+Para más información, consulta el archivo de licencia [`LICENSE`](LICENSE) o visita [creativecommons.org/licenses/by/4.0/](http://creativecommons.org/licenses/by/4.0/).
+
 ## Reglas del equipo
 
 - Textos en `res/values/strings.xml`, en español con **tuteo** ("Ingresa tu correo"). Nunca escritos directo en un Composable.
