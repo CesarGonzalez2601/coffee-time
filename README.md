@@ -123,6 +123,24 @@ app/src/main/java/com/coffeetime/
 
 La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títulos, Figtree para el resto, botones en píldora. Fuentes bajo SIL OFL 1.1 (ver [`licenses/`](licenses/)).
 
+### Mockups
+
+El prototipo completo de las pantallas de flujo de caja y administración está disponible en PDF en Google Drive, junto con sus vistas exportadas en [`docs/mockups/`](docs/mockups/):
+
+-  **[Ver documento completo de Mockups en Google Drive (PDF)](https://drive.google.com/file/d/1FiOA6WJYecrvtfMlEbMEwVMa53DG38zH/view?usp=sharing)**
+
+#### Flujo de venta · Cajero
+
+| 01 · Login | 02 · Inicio | 03 · Órdenes | 04 · Pago de orden | 05 · Pago procesado |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Login](docs/mockups/01-login.png) | ![Inicio](docs/mockups/02-inicio.png) | ![Órdenes](docs/mockups/03-ordenes.png) | ![Pago de orden](docs/mockups/04-pago-orden.png) | ![Pago procesado](docs/mockups/05-pago-procesado.png) |
+
+#### Administración
+
+| 06 · Pagos por cobrar | 07 · Inventario | 08 · Cierre de caja | 09 · Historial de cierres | 10 · Reportes |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Pagos por cobrar](docs/mockups/06-pago-cobrar.png) | ![Inventario](docs/mockups/07-inventarioadmin.png) | ![Cierre de caja](docs/mockups/08-cierrecaja.png) | ![Historial de cierres](docs/mockups/09-historial.png) | ![Reportes](docs/mockups/10-reportes.png) |
+
 ## Reglas del equipo
 
 - Textos en `res/values/strings.xml`, en español con **tuteo** ("Ingresa tu correo"). Nunca escritos directo en un Composable.
