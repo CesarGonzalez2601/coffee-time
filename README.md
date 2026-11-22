@@ -119,17 +119,38 @@ app/src/main/java/com/coffeetime/
     └── mas/                Arqueo y Cierre de caja aislado + Reportes de ventas (Hoy, Semana, Mes) + Top 5 productos
 ```
 
+## Licencia
+
+[![CC BY-NC-SA 4.0](https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.svg)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+Este proyecto está distribuido bajo la Licencia **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**. Eres libre de compartir, copiar, redistribuir, remezclar y transformar este material siempre y cuando:
+- Otorgues el crédito adecuado al equipo de desarrollo de Coffee Time.
+- No utilices el material con fines comerciales (NoComercial).
+- Distribuyas tus contribuciones bajo la misma licencia original (CompartirIgual).
+
+Para más información, consulta el archivo de licencia [`LICENSE`](LICENSE) o visita [creativecommons.org/licenses/by-nc-sa/4.0/](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+
 ## Diseño
 
 La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títulos, Figtree para el resto, botones en píldora. Fuentes bajo SIL OFL 1.1 (ver [`licenses/`](licenses/)).
 
-## Licencia
+### Mockups
 
-[![CC BY 4.0](https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by.svg)](http://creativecommons.org/licenses/by/4.0/)
+El prototipo completo de las pantallas de flujo de caja y administración está disponible en PDF en Google Drive, junto con sus vistas exportadas en [`docs/mockups/`](docs/mockups/):
 
-Este proyecto está distribuido bajo los términos de la Licencia **Creative Commons Atribución 4.0 Internacional (CC BY 4.0)**. Eres libre de compartir, copiar, redistribuir y adaptar este material para cualquier propósito, incluso comercial, siempre y cuando se otorgue el crédito adecuado al equipo de desarrollo de Coffee Time.
+- **[Ver documento completo de Mockups en Google Drive (PDF)](https://drive.google.com/file/d/1FiOA6WJYecrvtfMlEbMEwVMa53DG38zH/view?usp=sharing)**
 
-Para más información, consulta el archivo de licencia [`LICENSE`](LICENSE) o visita [creativecommons.org/licenses/by/4.0/](http://creativecommons.org/licenses/by/4.0/).
+#### Flujo de venta · Cajero
+
+| 01 · Login | 02 · Inicio | 03 · Órdenes | 04 · Pago de orden | 05 · Pago procesado |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Login](docs/mockups/01-login.png) | ![Inicio](docs/mockups/02-inicio.png) | ![Órdenes](docs/mockups/03-ordenes.png) | ![Pago de orden](docs/mockups/04-pago-orden.png) | ![Pago procesado](docs/mockups/05-pago-procesado.png) |
+
+#### Administración
+
+| 06 · Pagos por cobrar | 07 · Inventario | 08 · Cierre de caja | 09 · Historial de cierres | 10 · Reportes |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Pagos por cobrar](docs/mockups/06-pago-cobrar.png) | ![Inventario](docs/mockups/07-inventarioadmin.png) | ![Cierre de caja](docs/mockups/08-cierrecaja.png) | ![Historial de cierres](docs/mockups/09-historial.png) | ![Reportes](docs/mockups/10-reportes.png) |
 
 ## Reglas del equipo
 
