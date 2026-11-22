@@ -16,6 +16,7 @@ App Android de caja para una cafetería (proyecto universitario). La usan el **c
 | --- | --- | --- |
 | **Usuarios y Auth** | Firebase Auth (correo y contraseña, recuperación por correo, Google con Credential Manager), perfiles y roles en Firestore `users/{uid}`, sesión persistente y RBAC por rol | Listo |
 | **Catálogo y Carrito (Órdenes)** | Vista visual por categorías, buscador, carrito con subtotal, IVA (13%) y total en Firestore `ordenes/{id}` | Listo |
+| **Historial de Órdenes (#27)** | Filtro por fecha (Hoy/Semana/Mes/Todas), aislamiento por `cajeroUid` según `user.hasPermission(Permission.VIEW_REPORTS)` y modal detallado de ítems y pago | Listo |
 | **Procesamiento de Pagos** | Pago efectivo/tarjeta, calculadora de cambio, comprobante con correlativo y ticket en Firestore `pagos/{id}` | Listo |
 | **Gestión de Inventario** | Alertas de stock bajo, ajuste manual, trazabilidad de movimientos y CRUD completo de productos (crear, editar, eliminar) en Firestore `productos/{id}` y `movimientos_inventario/{id}` | Listo |
 | **Reportes y Cierre de Caja** | Métricas en Inicio, ventas por período (hoy, semana, mes), Top 5 productos más vendidos, arqueo y cierre diario aislado por jornada en Firestore `cierres_caja/{id}` | Listo |
@@ -115,7 +116,7 @@ app/src/main/java/com/coffeetime/
     ├── login/              LoginScreen (con correo, ojo mostrar clave, Olvidé clave, Google)
     ├── registro/           RegistroScreen (creación de cuenta)
     ├── main/               MainScreen y navegación por pestañas
-    ├── ordenes/            Catálogo por categoría + Carrito de compras + Desglose financiero
+    ├── ordenes/            Catálogo por categoría + Carrito de compras + Historial de Órdenes por Cajero (#27)
     ├── pagos/              Cobro efectivo/tarjeta + Calculadora de cambio + Historial de pagos + Comprobante
     ├── inventario/         Alertas stock bajo + Ajuste de stock + Historial de movimientos + CRUD Productos
     └── mas/                Arqueo y Cierre de caja aislado + Reportes de ventas (Hoy, Semana, Mes) + Top 5 productos
