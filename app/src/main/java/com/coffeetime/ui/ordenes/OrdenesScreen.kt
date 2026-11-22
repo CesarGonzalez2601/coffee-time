@@ -24,16 +24,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -44,10 +51,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,10 +71,13 @@ import androidx.compose.ui.unit.sp
 import com.coffeetime.R
 import com.coffeetime.domain.model.CartItem
 import com.coffeetime.domain.model.CategoriaProducto
+import com.coffeetime.domain.model.EstadoOrden
 import com.coffeetime.domain.model.Producto
 import com.coffeetime.domain.model.User
 import com.coffeetime.ui.theme.Size
 import com.coffeetime.ui.theme.Space
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -76,6 +89,17 @@ fun OrdenesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(user) {
+        viewModel.setUser(user)
+    }
+
+    uiState.selectedOrderForDetail?.let { historyItem ->
+        OrderDetailDialog(
+            item = historyItem,
+            onDismiss = { viewModel.selectOrderForDetail(null) }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -91,7 +115,7 @@ fun OrdenesScreen(
 
         Spacer(modifier = Modifier.height(Space.s3))
 
-        // Pestañas interna: Catálogo vs Carrito
+        // Pestañas internas: Catálogo vs Carrito vs Historial
         TabRow(
             selectedTabIndex = selectedTab,
             modifier = Modifier.fillMaxWidth()
@@ -124,19 +148,33 @@ fun OrdenesScreen(
                     }
                 }
             )
+            Tab(
+                selected = selectedTab == 2,
+                onClick = { selectedTab = 2 },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            modifier = Modifier.size(Size.iconSmall)
+                        )
+                        Spacer(modifier = Modifier.width(Space.s2))
+                        Text(text = stringResource(R.string.tab_historial_ordenes))
+                    }
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(Space.s3))
 
-        if (selectedTab == 0) {
-            CatalogView(
+        when (selectedTab) {
+            0 -> CatalogView(
                 uiState = uiState,
                 onCategorySelected = viewModel::onCategorySelected,
                 onSearchQueryChanged = viewModel::onSearchQueryChanged,
                 onAddToCart = viewModel::addToCart
             )
-        } else {
-            CartView(
+            1 -> CartView(
                 uiState = uiState,
                 onUpdateQuantity = viewModel::updateCartQuantity,
                 onRemoveItem = viewModel::removeFromCart,
@@ -147,8 +185,343 @@ fun OrdenesScreen(
                     }
                 }
             )
+            2 -> OrderHistoryView(
+                uiState = uiState,
+                onFiltroFechaSelected = viewModel::onFiltroFechaSelected,
+                onCajeroUidSelected = viewModel::onCajeroUidSelected,
+                onSelectDetail = viewModel::selectOrderForDetail
+            )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OrderHistoryView(
+    uiState: OrdenesUiState,
+    onFiltroFechaSelected: (FiltroFecha) -> Unit,
+    onCajeroUidSelected: (String?) -> Unit,
+    onSelectDetail: (OrderHistoryItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expandedCashierMenu by remember { mutableStateOf(false) }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        // Filtros de fecha (Chips horizontales)
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(Space.s2),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(FiltroFecha.entries.toTypedArray()) { filtro ->
+                val selected = uiState.selectedFiltroFecha == filtro
+                FilterChip(
+                    selected = selected,
+                    onClick = { onFiltroFechaSelected(filtro) },
+                    label = { Text(text = filtro.label) },
+                    leadingIcon = if (selected) {
+                        {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(Size.iconSmall)
+                            )
+                        }
+                    } else null
+                )
+            }
+        }
+
+        // Filtro por Cajero (Solo visible si el usuario tiene permiso VIEW_REPORTS por RBAC)
+        if (uiState.canFilterByCashier) {
+            Spacer(modifier = Modifier.height(Space.s3))
+
+            val selectedCashierName = uiState.allCashiers.firstOrNull { it.first == uiState.selectedCajeroUid }?.second
+                ?: stringResource(R.string.todos_los_cajeros)
+
+            ExposedDropdownMenuBox(
+                expanded = expandedCashierMenu,
+                onExpandedChange = { expandedCashierMenu = it },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = selectedCashierName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.filtro_cajero)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCashierMenu) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedCashierMenu,
+                    onDismissRequest = { expandedCashierMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.todos_los_cajeros)) },
+                        onClick = {
+                            onCajeroUidSelected(null)
+                            expandedCashierMenu = false
+                        }
+                    )
+                    uiState.allCashiers.forEach { (uid, name) ->
+                        DropdownMenuItem(
+                            text = { Text(name) },
+                            onClick = {
+                                onCajeroUidSelected(uid)
+                                expandedCashierMenu = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Space.s3))
+
+        // Lista de Órdenes
+        if (uiState.historyOrders.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.sin_ordenes_historial),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(Space.s3),
+                contentPadding = PaddingValues(bottom = Space.s4),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(uiState.historyOrders, key = { it.orden.id }) { item ->
+                    OrderHistoryCard(
+                        item = item,
+                        onClickDetail = { onSelectDetail(item) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OrderHistoryCard(
+    item: OrderHistoryItem,
+    onClickDetail: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+    val fechaStr = dateFormat.format(Date(item.orden.fechaTimestamp))
+
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(Space.s4)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Orden #${item.orden.id}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = when (item.orden.estado) {
+                        EstadoOrden.PENDIENTE -> "PENDIENTE"
+                        EstadoOrden.PAGADA -> "PAGADA"
+                        EstadoOrden.CANCELADA -> "CANCELADA"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = when (item.orden.estado) {
+                        EstadoOrden.PAGADA -> MaterialTheme.colorScheme.primary
+                        EstadoOrden.PENDIENTE -> MaterialTheme.colorScheme.tertiary
+                        EstadoOrden.CANCELADA -> MaterialTheme.colorScheme.error
+                    },
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Space.s1))
+
+            Text(
+                text = "${stringResource(R.string.fecha_label)}: $fechaStr",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = "${stringResource(R.string.creado_por)}: ${item.cashierName}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(Space.s2))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(Space.s2))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "${item.orden.items.sumOf { it.cantidad }} ítems",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = String.format(Locale.US, "Total: $%.2f", item.orden.total),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = onClickDetail,
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(Size.iconSmall)
+                    )
+                    Spacer(modifier = Modifier.width(Space.s1))
+                    Text(text = stringResource(R.string.ver_detalle))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OrderDetailDialog(
+    item: OrderHistoryItem,
+    onDismiss: () -> Unit
+) {
+    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.detalle_orden_titulo, item.orden.id),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(Space.s2)
+            ) {
+                Text(text = "${stringResource(R.string.fecha_label)}: ${dateFormat.format(Date(item.orden.fechaTimestamp))}")
+                Text(text = "${stringResource(R.string.creado_por)}: ${item.cashierName}")
+                Text(text = "${stringResource(R.string.estado_label)}: ${item.orden.estado}")
+
+                item.pago?.let { p ->
+                    Text(text = "${stringResource(R.string.metodo_pago)}: ${p.metodoPago.name}")
+                    Text(text = "${stringResource(R.string.correlativo_label)}: ${p.comprobanteCorrelativo}")
+                }
+
+                Spacer(modifier = Modifier.height(Space.s2))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(Space.s2))
+
+                Text(
+                    text = "Productos de la orden:",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                item.orden.items.forEach { detalle ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${detalle.cantidad}x ${detalle.nombreProducto}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = String.format(Locale.US, "$%.2f", detalle.subtotalLinea),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(Space.s2))
+                HorizontalDivider()
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(R.string.subtotal), style = MaterialTheme.typography.bodyMedium)
+                    Text(text = String.format(Locale.US, "$%.2f", item.orden.subtotal), style = MaterialTheme.typography.bodyMedium)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(R.string.iva), style = MaterialTheme.typography.bodyMedium)
+                    Text(text = String.format(Locale.US, "$%.2f", item.orden.iva), style = MaterialTheme.typography.bodyMedium)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(R.string.total), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = String.format(Locale.US, "$%.2f", item.orden.total),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                item.pago?.let { p ->
+                    if (p.montoRecibido > 0) {
+                        Spacer(modifier = Modifier.height(Space.s1))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = stringResource(R.string.monto_recibido), style = MaterialTheme.typography.bodySmall)
+                            Text(text = String.format(Locale.US, "$%.2f", p.montoRecibido), style = MaterialTheme.typography.bodySmall)
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = stringResource(R.string.cambio_a_entregar), style = MaterialTheme.typography.bodySmall)
+                            Text(text = String.format(Locale.US, "$%.2f", p.cambio), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text(text = stringResource(R.string.nueva_orden))
+            }
+        }
+    )
 }
 
 @Composable

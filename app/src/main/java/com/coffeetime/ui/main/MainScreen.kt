@@ -210,8 +210,10 @@ fun MainScreen(
                 ) {
                     val ordenesViewModel: OrdenesViewModel = viewModel(
                         factory = OrdenesViewModel.provideFactory(
-                            appContainer.productRepository,
-                            appContainer.orderRepository
+                            productRepository = appContainer.productRepository,
+                            orderRepository = appContainer.orderRepository,
+                            paymentRepository = appContainer.paymentRepository,
+                            userRepository = appContainer.userRepository
                         )
                     )
                     OrdenesScreen(
