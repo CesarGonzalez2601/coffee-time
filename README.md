@@ -1,5 +1,7 @@
 # Coffee Time
 
+<!-- Proyecto Coffee Time - Avance 2 (Firebase Auth & Firestore) -->
+
 App Android de caja para una cafetería (proyecto universitario). La usan el **cajero** (tomar órdenes y cobrar) y el **administrador** (inventario, CRUD de productos, reportes y cierre de caja). Hecha con Kotlin, Jetpack Compose y Material 3.
 
 > La versión de consola (Etapa 2: Kotlin/JVM + SQLite JDBC) quedó guardada en el tag [`etapa-2`](https://github.com/CesarGonzalez2601/coffee-time/tree/etapa-2). Desde la Etapa 3 el repo es un proyecto de Android Studio.
@@ -119,6 +121,17 @@ app/src/main/java/com/coffeetime/
     └── mas/                Arqueo y Cierre de caja aislado + Reportes de ventas (Hoy, Semana, Mes) + Top 5 productos
 ```
 
+## Licencia
+
+[![CC BY-NC-SA 4.0](https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.svg)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+Este proyecto está distribuido bajo la Licencia **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**. Eres libre de compartir, copiar, redistribuir, remezclar y transformar este material siempre y cuando:
+- Otorgues el crédito adecuado al equipo de desarrollo de Coffee Time.
+- No utilices el material con fines comerciales (NoComercial).
+- Distribuyas tus contribuciones bajo la misma licencia original (CompartirIgual).
+
+Para más información, consulta el archivo de licencia [`LICENSE`](LICENSE) o visita [creativecommons.org/licenses/by-nc-sa/4.0/](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+
 ## Diseño
 
 La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títulos, Figtree para el resto, botones en píldora. Fuentes bajo SIL OFL 1.1 (ver [`licenses/`](licenses/)).
@@ -127,7 +140,7 @@ La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títu
 
 El prototipo completo de las pantallas de flujo de caja y administración está disponible en PDF en Google Drive, junto con sus vistas exportadas en [`docs/mockups/`](docs/mockups/):
 
--  **[Ver documento completo de Mockups en Google Drive (PDF)](https://drive.google.com/file/d/1FiOA6WJYecrvtfMlEbMEwVMa53DG38zH/view?usp=sharing)**
+- **[Ver documento completo de Mockups en Google Drive (PDF)](https://drive.google.com/file/d/1FiOA6WJYecrvtfMlEbMEwVMa53DG38zH/view?usp=sharing)**
 
 #### Flujo de venta · Cajero
 

@@ -14,6 +14,7 @@
     <string name="send_reset_link">Enviar Correo de Recuperación</string>
     <string name="reset_link_sent_success">Correo enviado exitosamente. Revisa tu bandeja de entrada.</string>
     <string name="login_google">Continuar con Google</string>
+    <string name="auth_error_no_google_credentials">No hay cuentas de Google registradas en este dispositivo. Inicia sesión con correo/contraseña o agrega tu cuenta en los Ajustes del teléfono.</string>
 
     <!-- Registro -->
     <string name="registro_title">Crear cuenta</string>
