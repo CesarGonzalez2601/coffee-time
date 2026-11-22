@@ -8,7 +8,7 @@ App Android de caja para una cafetería (proyecto universitario). La usan el **c
 
 ## Video de Presentación y Documentación
 
-🎥 [Ver video de demostración y documento PDF de investigación en Google Drive](https://drive.google.com/drive/folders/1PAOZJWKvqeEEvVMTIzZqIn3ie5bq555Q?usp=sharing)
+🎥 [Ver video de demostración y documento PDF de investigación en Google Drive](https://drive.google.com/drive/folders/1BL_oKQ8pN1f93JRhlgF6U_je-dI6Jx6Q?usp=sharing)
 
 ## Estado de Funcionalidades
 
