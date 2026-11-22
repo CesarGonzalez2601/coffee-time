@@ -1,5 +1,7 @@
 # Coffee Time
 
+<!-- Proyecto Coffee Time - Avance 2 (Firebase Auth & Firestore) -->
+
 App Android de caja para una cafetería (proyecto universitario). La usan el **cajero** (tomar órdenes y cobrar) y el **administrador** (inventario, CRUD de productos, reportes y cierre de caja). Hecha con Kotlin, Jetpack Compose y Material 3.
 
 > La versión de consola (Etapa 2: Kotlin/JVM + SQLite JDBC) quedó guardada en el tag [`etapa-2`](https://github.com/CesarGonzalez2601/coffee-time/tree/etapa-2). Desde la Etapa 3 el repo es un proyecto de Android Studio.
