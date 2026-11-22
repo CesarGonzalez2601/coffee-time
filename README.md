@@ -1,5 +1,7 @@
 # Coffee Time
 
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 App Android de caja para una cafetería (proyecto universitario). La usan el **cajero** (tomar órdenes y cobrar) y el **administrador** (inventario, CRUD de productos, reportes y cierre de caja). Hecha con Kotlin, Jetpack Compose y Material 3.
 
 > La versión de consola (Etapa 2: Kotlin/JVM + SQLite JDBC) quedó guardada en el tag [`etapa-2`](https://github.com/CesarGonzalez2601/coffee-time/tree/etapa-2). Desde la Etapa 3 el repo es un proyecto de Android Studio.
@@ -128,3 +130,9 @@ La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títu
 - Textos en `res/values/strings.xml`, en español con **tuteo** ("Ingresa tu correo"). Nunca escritos directo en un Composable.
 - Colores, fuentes y tamaños salen de `MaterialTheme` y de `Space` / `Size`.
 - Versiones de librerías solo en `libs.versions.toml`.
+
+## Licencia
+
+Este proyecto se distribuye bajo la licencia **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**. Consulta el archivo [`LICENSE`](LICENSE) para más detalles.
+
+Las tipografías incluidas en el proyecto (Fraunces y Figtree) mantienen su propia licencia **SIL Open Font License 1.1 (SIL OFL 1.1)**, disponible en [licenses/](licenses/) (`OFL-Figtree.txt` y `OFL-Fraunces.txt`).
