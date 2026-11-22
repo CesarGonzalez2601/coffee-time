@@ -79,6 +79,17 @@
     <string name="stock_disponible">Stock: %1$d</string>
     <string name="orden_creada_exito">Orden #%1$d creada exitosamente</string>
 
+    <!-- Historial de Órdenes (#27) -->
+    <string name="tab_historial_ordenes">Historial de Órdenes</string>
+    <string name="filtro_fecha">Filtrar por Fecha</string>
+    <string name="filtro_cajero">Filtrar por Cajero</string>
+    <string name="todos_los_cajeros">Todos los cajeros</string>
+    <string name="sin_ordenes_historial">No se encontraron órdenes registradas para los filtros seleccionados</string>
+    <string name="detalle_orden_titulo">Detalle de Orden #%1$d</string>
+    <string name="creado_por">Atendido por</string>
+    <string name="estado_label">Estado</string>
+    <string name="ver_detalle">Ver Detalle</string>
+
     <!-- Procesamiento de Pagos (Punto 2) -->
     <string name="pagos_titulo">Procesamiento de Pagos</string>
     <string name="tab_pendientes">Pendientes de Cobro</string>
