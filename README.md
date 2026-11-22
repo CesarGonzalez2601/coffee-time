@@ -131,6 +131,15 @@ La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títu
 - Colores, fuentes y tamaños salen de `MaterialTheme` y de `Space` / `Size`.
 - Versiones de librerías solo en `libs.versions.toml`.
 
+## Equipo de desarrollo
+
+| Nombre | Usuario de GitHub | Rama | Módulo |
+| :--- | :--- | :--- | :--- |
+| William Ortiz | `@william12-rtz` | `feature/william` | Navegación principal por rol (`main-nav`), órdenes/cobros y pulido UX/UI |
+| Cesar Gonzalez | `@CesarGonzalez2601` | `feature/cesargonzalez` | Autenticación (`login` con PinPad), persistencia de usuarios y administración del repo |
+| Erick Fuentes | `@ErickfuentesIT` | `feature/erickfuentes` | Base Android (`Fase 0`), Firebase Auth/sesión/usuarios, persistencia de datos y QA final |
+| Jairo | `@Jairo090101` | `feature/jairo` | Investigación Jetpack Compose (`pdf-compose`), catálogo demo en Firestore, reglas de datos e integración/entrega |
+| Luis Hernandez | `@LuisHernandezRivas` | `feature/luishernandez` | Auto-registro de cajeros (`registro`) |
 ## Licencia
 
 Este proyecto se distribuye bajo la licencia **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**. Consulta el archivo [`LICENSE`](LICENSE) para más detalles.
