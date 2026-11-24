@@ -1,5 +1,6 @@
 # Coffee Time
 
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 <!-- Proyecto Coffee Time - Avance 2 (Firebase Auth & Firestore) -->
 
 App Android de caja para una cafetería (proyecto universitario). La usan el **cajero** (tomar órdenes y cobrar) y el **administrador** (inventario, CRUD de productos, reportes y cierre de caja). Hecha con Kotlin, Jetpack Compose y Material 3.
@@ -160,3 +161,18 @@ El prototipo completo de las pantallas de flujo de caja y administración está 
 - Textos en `res/values/strings.xml`, en español con **tuteo** ("Ingresa tu correo"). Nunca escritos directo en un Composable.
 - Colores, fuentes y tamaños salen de `MaterialTheme` y de `Space` / `Size`.
 - Versiones de librerías solo en `libs.versions.toml`.
+
+## Equipo de desarrollo
+
+| Nombre | Usuario de GitHub | Rama | Módulo |
+| :--- | :--- | :--- | :--- |
+| William Ortiz | `@william12-rtz` | `feature/william` | Navegación principal por rol (`main-nav`), órdenes/cobros y pulido UX/UI |
+| Cesar Gonzalez | `@CesarGonzalez2601` | `feature/cesargonzalez` | Autenticación (`login` con PinPad), persistencia de usuarios y administración del repo |
+| Erick Fuentes | `@ErickfuentesIT` | `feature/erickfuentes` | Base Android (`Fase 0`), Firebase Auth/sesión/usuarios, persistencia de datos y QA final |
+| Jairo | `@Jairo090101` | `feature/jairo` | Investigación Jetpack Compose (`pdf-compose`), catálogo demo en Firestore, reglas de datos e integración/entrega |
+| Luis Hernandez | `@LuisHernandezRivas` | `feature/luishernandez` | Auto-registro de cajeros (`registro`) |
+## Licencia
+
+Este proyecto se distribuye bajo la licencia **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**. Consulta el archivo [`LICENSE`](LICENSE) para más detalles.
+
+Las tipografías incluidas en el proyecto (Fraunces y Figtree) mantienen su propia licencia **SIL Open Font License 1.1 (SIL OFL 1.1)**, disponible en [licenses/](licenses/) (`OFL-Figtree.txt` y `OFL-Fraunces.txt`).
