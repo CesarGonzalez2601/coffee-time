@@ -1,6 +1,7 @@
 # Coffee Time
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+<!-- Proyecto Coffee Time - Avance 2 (Firebase Auth & Firestore) -->
 
 App Android de caja para una cafetería (proyecto universitario). La usan el **cajero** (tomar órdenes y cobrar) y el **administrador** (inventario, CRUD de productos, reportes y cierre de caja). Hecha con Kotlin, Jetpack Compose y Material 3.
 
@@ -8,7 +9,7 @@ App Android de caja para una cafetería (proyecto universitario). La usan el **c
 
 ## Video de Presentación y Documentación
 
-🎥 [Ver video de demostración y documento PDF de investigación en Google Drive](https://drive.google.com/drive/folders/1PAOZJWKvqeEEvVMTIzZqIn3ie5bq555Q?usp=sharing)
+🎥 [Ver video de demostración y documento PDF de investigación en Google Drive](https://drive.google.com/drive/folders/1BL_oKQ8pN1f93JRhlgF6U_je-dI6Jx6Q?usp=sharing)
 
 ## Estado de Funcionalidades
 
@@ -16,6 +17,7 @@ App Android de caja para una cafetería (proyecto universitario). La usan el **c
 | --- | --- | --- |
 | **Usuarios y Auth** | Firebase Auth (correo y contraseña, recuperación por correo, Google con Credential Manager), perfiles y roles en Firestore `users/{uid}`, sesión persistente y RBAC por rol | Listo |
 | **Catálogo y Carrito (Órdenes)** | Vista visual por categorías, buscador, carrito con subtotal, IVA (13%) y total en Firestore `ordenes/{id}` | Listo |
+| **Historial de Órdenes (#27)** | Filtro por fecha (Hoy/Semana/Mes/Todas), aislamiento por `cajeroUid` según `user.hasPermission(Permission.VIEW_REPORTS)` y modal detallado de ítems y pago | Listo |
 | **Procesamiento de Pagos** | Pago efectivo/tarjeta, calculadora de cambio, comprobante con correlativo y ticket en Firestore `pagos/{id}` | Listo |
 | **Gestión de Inventario** | Alertas de stock bajo, ajuste manual, trazabilidad de movimientos y CRUD completo de productos (crear, editar, eliminar) en Firestore `productos/{id}` y `movimientos_inventario/{id}` | Listo |
 | **Reportes y Cierre de Caja** | Métricas en Inicio, ventas por período (hoy, semana, mes), Top 5 productos más vendidos, arqueo y cierre diario aislado por jornada en Firestore `cierres_caja/{id}` | Listo |
@@ -115,15 +117,44 @@ app/src/main/java/com/coffeetime/
     ├── login/              LoginScreen (con correo, ojo mostrar clave, Olvidé clave, Google)
     ├── registro/           RegistroScreen (creación de cuenta)
     ├── main/               MainScreen y navegación por pestañas
-    ├── ordenes/            Catálogo por categoría + Carrito de compras + Desglose financiero
+    ├── ordenes/            Catálogo por categoría + Carrito de compras + Historial de Órdenes por Cajero (#27)
     ├── pagos/              Cobro efectivo/tarjeta + Calculadora de cambio + Historial de pagos + Comprobante
     ├── inventario/         Alertas stock bajo + Ajuste de stock + Historial de movimientos + CRUD Productos
     └── mas/                Arqueo y Cierre de caja aislado + Reportes de ventas (Hoy, Semana, Mes) + Top 5 productos
 ```
 
+## Licencia
+
+[![CC BY-NC-SA 4.0](https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-sa.svg)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+Este proyecto está distribuido bajo la Licencia **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**. Eres libre de compartir, copiar, redistribuir, remezclar y transformar este material siempre y cuando:
+- Otorgues el crédito adecuado al equipo de desarrollo de Coffee Time.
+- No utilices el material con fines comerciales (NoComercial).
+- Distribuyas tus contribuciones bajo la misma licencia original (CompartirIgual).
+
+Para más información, consulta el archivo de licencia [`LICENSE`](LICENSE) o visita [creativecommons.org/licenses/by-nc-sa/4.0/](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+
 ## Diseño
 
 La UI sigue el design system de Coffee Time: tonos de café, Fraunces para títulos, Figtree para el resto, botones en píldora. Fuentes bajo SIL OFL 1.1 (ver [`licenses/`](licenses/)).
+
+### Mockups
+
+El prototipo completo de las pantallas de flujo de caja y administración está disponible en PDF en Google Drive, junto con sus vistas exportadas en [`docs/mockups/`](docs/mockups/):
+
+- **[Ver documento completo de Mockups en Google Drive (PDF)](https://drive.google.com/file/d/1FiOA6WJYecrvtfMlEbMEwVMa53DG38zH/view?usp=sharing)**
+
+#### Flujo de venta · Cajero
+
+| 01 · Login | 02 · Inicio | 03 · Órdenes | 04 · Pago de orden | 05 · Pago procesado |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Login](docs/mockups/01-login.png) | ![Inicio](docs/mockups/02-inicio.png) | ![Órdenes](docs/mockups/03-ordenes.png) | ![Pago de orden](docs/mockups/04-pago-orden.png) | ![Pago procesado](docs/mockups/05-pago-procesado.png) |
+
+#### Administración
+
+| 06 · Pagos por cobrar | 07 · Inventario | 08 · Cierre de caja | 09 · Historial de cierres | 10 · Reportes |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Pagos por cobrar](docs/mockups/06-pago-cobrar.png) | ![Inventario](docs/mockups/07-inventarioadmin.png) | ![Cierre de caja](docs/mockups/08-cierrecaja.png) | ![Historial de cierres](docs/mockups/09-historial.png) | ![Reportes](docs/mockups/10-reportes.png) |
 
 ## Reglas del equipo
 
